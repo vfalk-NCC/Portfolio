@@ -2,7 +2,7 @@
 <html lang="sv">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>Victor – En liten planet. Ett stort bygge.</title>
 <meta name="description" content="Interaktiv portfolio: produktionsplanering, VDC och egenutvecklade digitala verktyg för byggproduktion.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -38,7 +38,10 @@ button{font:inherit;cursor:pointer;border:0}
 .bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--orange),var(--pink));border-radius:9px;transition:width .5s}
 .hint{position:fixed;right:16px;bottom:16px;z-index:5;font-size:.8rem;color:var(--muted);background:rgba(255,253,248,.85);padding:8px 12px;border-radius:12px;opacity:0;transition:opacity .6s}
 .hint.on{opacity:1}
-@media(max-width:640px){.hint{display:none}.badge .role{display:none}.pill{padding:9px 12px;font-size:.82rem}}
+.hud{padding:calc(12px + env(safe-area-inset-top)) calc(12px + env(safe-area-inset-right)) 12px calc(12px + env(safe-area-inset-left))}
+.progress{bottom:calc(14px + env(safe-area-inset-bottom))}
+.sheet{bottom:calc(14px + env(safe-area-inset-bottom))}
+@media(max-width:640px){.hint{display:none}.badge .name,.badge .role{display:none}.badge{padding:7px}.right{gap:6px;flex-wrap:nowrap}.pill{padding:9px 12px;font-size:.8rem;white-space:nowrap}.progress{left:12px}.sheet{padding:18px 18px 16px}.sheet h2{font-size:1.2rem}}
 
 /* prompt over station */
 .prompt{position:fixed;z-index:6;transform:translate(-50%,-100%);background:var(--ink);color:#fff;font-family:Fredoka;font-weight:600;font-size:.92rem;padding:8px 14px;border-radius:14px;white-space:nowrap;pointer-events:auto;display:none;box-shadow:0 10px 30px rgba(0,0,0,.2);animation:bob 1.6s ease-in-out infinite}
@@ -484,9 +487,10 @@ function resize(){
   const w = innerWidth, h = innerHeight;
   renderer.setSize(w, h, false);
   camera.aspect = w/h;
-  const far = w < 700 ? 1.35 : 1;
-  camera.position.set(0, R + 7.5*far, 11.5*far);
-  camera.lookAt(0, R - 1.2, -2);
+  const portrait = h > w;
+  camera.fov = portrait ? 62 : 45;
+  if(portrait){ camera.position.set(0, R + 8, 9); camera.lookAt(0, R - 3.2, -1.5); }
+  else { camera.position.set(0, R + 7.5, 11.5); camera.lookAt(0, R - 1.2, -2); }
   camera.updateProjectionMatrix();
 }
 addEventListener("resize", resize); resize();
@@ -525,6 +529,7 @@ canvas.addEventListener("pointerup", e => {
 
 // spel-loop
 const clock = new THREE.Clock();
+const TOUCH = matchMedia("(pointer: coarse)").matches;
 const prompt = document.getElementById("prompt");
 let walkT = 0, facing = 0;
 const tmp = new THREE.Vector3(), tmpQ = new THREE.Quaternion();
@@ -587,9 +592,10 @@ function loop(){
   if(near && started && !window.__uiOpen() && !window.__sheetOpen()){
     const p = near.sign.getWorldPosition(new THREE.Vector3()).project(camera);
     prompt.style.display = "block";
-    prompt.style.left = ((p.x+1)/2*innerWidth) + "px";
+    const pw = prompt.offsetWidth || 120;
+    prompt.style.left = Math.min(innerWidth - pw/2 - 8, Math.max(pw/2 + 8, (p.x+1)/2*innerWidth)) + "px";
     prompt.style.top = ((1-p.y)/2*innerHeight - 30) + "px";
-    prompt.innerHTML = `${near.item.n}<kbd>E</kbd>`;
+    prompt.innerHTML = TOUCH ? `${near.item.n} · tryck` : `${near.item.n}<kbd>E</kbd>`;
     prompt.onclick = () => window.__showSheet(near.item);
   } else prompt.style.display = "none";
 
