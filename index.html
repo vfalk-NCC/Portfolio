@@ -2,269 +2,620 @@
 <html lang="sv">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Victor – Produktionsplanering, VDC & digitala verktyg</title>
-<meta name="description" content="Portfolio och verktygsnav: produktionsplanering, VDC och egenutvecklade digitala verktyg för byggproduktion.">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Victor – En liten planet. Ett stort bygge.</title>
+<meta name="description" content="Interaktiv portfolio: produktionsplanering, VDC och egenutvecklade digitala verktyg för byggproduktion.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
 :root{
-  --bg:#f6f7fb; --card:#ffffff; --ink:#14171f; --muted:#5b6475; --line:#e4e7ef;
-  --accent:#0a6cff; --accent2:#00b3a4; --glow:rgba(10,108,255,.18);
-  --radius:18px;
+  --ink:#2b2a3a; --muted:#6c6a80; --card:#fffdf8; --line:#efe7da;
+  --orange:#ff8a3d; --blue:#5b8cff; --green:#5cc28a; --pink:#ff7aa8; --yellow:#ffc94a;
+  --shadow:0 18px 50px rgba(70,60,110,.18);
 }
-*{box-sizing:border-box}
-html{scroll-behavior:smooth}
-body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Inter,Roboto,sans-serif;background:var(--bg);color:var(--ink);line-height:1.55;-webkit-font-smoothing:antialiased}
-a{color:var(--accent);text-decoration:none}
-.wrap{max-width:1080px;margin:0 auto;padding:0 22px}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;overflow:hidden;font-family:Nunito,system-ui,sans-serif;color:var(--ink)}
+body{background:linear-gradient(180deg,#a9d8ff 0%,#cfe8ff 45%,#ffe6cf 100%)}
+canvas#c{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:pointer}
+h1,h2,h3,.f{font-family:Fredoka,Nunito,sans-serif;letter-spacing:-.01em}
+button{font:inherit;cursor:pointer;border:0}
 
-/* nav */
-nav{position:sticky;top:0;z-index:10;backdrop-filter:saturate(1.6) blur(14px);background:rgba(246,247,251,.78);border-bottom:1px solid var(--line)}
-nav .wrap{display:flex;align-items:center;justify-content:space-between;height:60px}
-.logo{font-weight:700;letter-spacing:-.02em;color:var(--ink)}
-.logo span{color:var(--accent)}
-nav ul{list-style:none;display:flex;gap:22px;margin:0;padding:0;font-size:.94rem}
-nav ul a{color:var(--muted)} nav ul a:hover{color:var(--ink)}
-@media(max-width:640px){nav ul{gap:14px;font-size:.86rem}}
+/* HUD */
+.hud{position:fixed;left:0;right:0;top:0;display:flex;justify-content:space-between;align-items:flex-start;padding:16px;pointer-events:none;z-index:5;opacity:0;transition:opacity .6s}
+.hud.on{opacity:1}
+.hud>*{pointer-events:auto}
+.badge{background:rgba(255,253,248,.92);backdrop-filter:blur(8px);border-radius:16px;padding:10px 14px;box-shadow:var(--shadow);display:flex;align-items:center;gap:10px}
+.badge .name{font-family:Fredoka;font-weight:700;font-size:1.15rem}
+.badge .role{font-size:.78rem;color:var(--muted);line-height:1.2}
+.hat{width:34px;height:34px;border-radius:50%;background:var(--orange);display:grid;place-items:center;font-size:1.05rem}
+.right{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.pill{background:rgba(255,253,248,.92);backdrop-filter:blur(8px);border-radius:99px;padding:10px 15px;font-weight:700;font-size:.88rem;box-shadow:var(--shadow);color:var(--ink);transition:transform .15s}
+.pill:hover{transform:translateY(-2px)}
+.progress{position:fixed;left:16px;bottom:16px;z-index:5;opacity:0;transition:opacity .6s}
+.progress.on{opacity:1}
+.progress .badge{font-weight:700;font-size:.88rem}
+.bar{width:110px;height:8px;border-radius:9px;background:#efe7da;overflow:hidden}
+.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--orange),var(--pink));border-radius:9px;transition:width .5s}
+.hint{position:fixed;right:16px;bottom:16px;z-index:5;font-size:.8rem;color:var(--muted);background:rgba(255,253,248,.85);padding:8px 12px;border-radius:12px;opacity:0;transition:opacity .6s}
+.hint.on{opacity:1}
+@media(max-width:640px){.hint{display:none}.badge .role{display:none}.pill{padding:9px 12px;font-size:.82rem}}
 
-/* hero */
-.hero{position:relative;padding:96px 0 72px;overflow:hidden}
-.hero::before{content:"";position:absolute;inset:-40% -10% auto auto;width:720px;height:720px;border-radius:50%;
-  background:radial-gradient(circle,var(--glow),transparent 62%);pointer-events:none}
-.hero::after{content:"";position:absolute;left:-200px;bottom:-260px;width:600px;height:600px;border-radius:50%;
-  background:radial-gradient(circle,rgba(0,179,164,.14),transparent 62%);pointer-events:none}
-.eyebrow{display:inline-block;font-size:.8rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);
-  background:#fff;border:1px solid var(--line);padding:6px 12px;border-radius:99px;box-shadow:0 4px 18px var(--glow)}
-h1{font-size:clamp(2.2rem,5.4vw,3.9rem);line-height:1.05;letter-spacing:-.035em;margin:22px 0 18px;max-width:16ch}
-h1 em{font-style:normal;background:linear-gradient(90deg,var(--accent),var(--accent2));-webkit-background-clip:text;background-clip:text;color:transparent}
-.lead{font-size:1.18rem;color:var(--muted);max-width:60ch;margin:0 0 30px}
-.btns{display:flex;gap:12px;flex-wrap:wrap}
-.btn{display:inline-flex;align-items:center;gap:8px;padding:12px 20px;border-radius:12px;font-weight:600;font-size:.98rem;transition:transform .15s,box-shadow .15s}
-.btn.primary{background:var(--accent);color:#fff;box-shadow:0 8px 26px var(--glow)}
-.btn.ghost{background:#fff;color:var(--ink);border:1px solid var(--line)}
-.btn:hover{transform:translateY(-1px)}
+/* prompt over station */
+.prompt{position:fixed;z-index:6;transform:translate(-50%,-100%);background:var(--ink);color:#fff;font-family:Fredoka;font-weight:600;font-size:.92rem;padding:8px 14px;border-radius:14px;white-space:nowrap;pointer-events:auto;display:none;box-shadow:0 10px 30px rgba(0,0,0,.2);animation:bob 1.6s ease-in-out infinite}
+.prompt::after{content:"";position:absolute;left:50%;bottom:-6px;transform:translateX(-50%);border:6px solid transparent;border-top-color:var(--ink);border-bottom:0}
+.prompt kbd{background:rgba(255,255,255,.18);border-radius:6px;padding:1px 6px;margin-left:6px;font-family:inherit}
+@keyframes bob{50%{margin-top:-5px}}
 
-.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-top:56px}
-.stat{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:18px 20px}
-.stat b{display:block;font-size:1.7rem;letter-spacing:-.03em}
-.stat span{color:var(--muted);font-size:.9rem}
-@media(max-width:760px){.stats{grid-template-columns:repeat(2,1fr)}}
+/* intro */
+.intro{position:fixed;inset:0;z-index:20;display:grid;place-items:center;padding:20px;transition:opacity .7s,visibility .7s}
+.intro.off{opacity:0;visibility:hidden}
+.intro .card{background:rgba(255,253,248,.94);backdrop-filter:blur(10px);border-radius:28px;padding:34px 34px 28px;max-width:440px;text-align:center;box-shadow:var(--shadow)}
+.kicker{display:inline-block;font-size:.74rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--orange);background:#fff1e6;padding:6px 12px;border-radius:99px}
+.intro h1{font-size:3rem;margin:14px 0 4px}
+.intro p{color:var(--muted);margin:0 0 24px;font-size:1.06rem}
+.go{background:var(--orange);color:#fff;font-family:Fredoka;font-weight:600;font-size:1.15rem;padding:15px 30px;border-radius:18px;box-shadow:0 10px 0 #d86a22,0 18px 30px rgba(255,138,61,.35);transition:transform .1s,box-shadow .1s}
+.go:active{transform:translateY(6px);box-shadow:0 4px 0 #d86a22}
+.alt{display:block;margin:20px auto 0;background:none;color:var(--muted);font-weight:700;text-decoration:underline;text-underline-offset:3px}
+.keys{margin-top:18px;font-size:.8rem;color:var(--muted)}
 
-/* sections */
-section{padding:72px 0}
-h2{font-size:clamp(1.6rem,3.2vw,2.3rem);letter-spacing:-.03em;margin:0 0 10px}
-.sub{color:var(--muted);max-width:62ch;margin:0 0 36px}
+/* sheet (station info) */
+.sheet{position:fixed;left:50%;bottom:20px;z-index:10;width:min(520px,calc(100% - 24px));transform:translate(-50%,130%);transition:transform .45s cubic-bezier(.2,1.3,.4,1);background:var(--card);border-radius:26px;box-shadow:var(--shadow);padding:22px 22px 20px}
+.sheet.on{transform:translate(-50%,0)}
+.sheet .top{display:flex;gap:14px;align-items:center;margin-bottom:10px}
+.sheet .emo{width:58px;height:58px;flex:none;border-radius:18px;display:grid;place-items:center;font-size:1.9rem}
+.sheet h2{margin:0;font-size:1.4rem}
+.sheet .tag{font-size:.78rem;font-weight:700;color:var(--muted)}
+.sheet p{margin:6px 0 16px;color:#4a4860;line-height:1.55}
+.sheet .row{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.status{font-size:.82rem;font-weight:700}
+.status.live{color:#2e9d63}.status.dev{color:#c58a12}
+.btn{border-radius:14px;padding:11px 18px;font-weight:700;font-size:.92rem}
+.btn.p{background:var(--ink);color:#fff}
+.btn.s{background:#f3ece0;color:var(--ink)}
+.x{position:absolute;right:14px;top:14px;width:34px;height:34px;border-radius:50%;background:#f3ece0;font-size:1rem;color:var(--ink)}
 
-/* about */
-.about{display:grid;grid-template-columns:1.2fr 1fr;gap:28px}
-.panel{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:26px}
-.panel h3{margin:0 0 10px;font-size:1.05rem}
-.panel p{margin:0 0 12px;color:var(--muted)}
-.chips{display:flex;flex-wrap:wrap;gap:8px}
-.chip{font-size:.84rem;padding:6px 11px;border-radius:99px;background:var(--bg);border:1px solid var(--line);color:var(--ink)}
-@media(max-width:820px){.about{grid-template-columns:1fr}}
-
-/* timeline */
-.tl{position:relative;margin-left:8px;border-left:2px solid var(--line);padding-left:26px}
-.tl-item{position:relative;margin-bottom:30px}
-.tl-item::before{content:"";position:absolute;left:-34px;top:6px;width:14px;height:14px;border-radius:50%;background:#fff;border:3px solid var(--accent);box-shadow:0 0 0 5px var(--glow)}
-.tl-item .when{font-size:.84rem;font-weight:600;color:var(--accent)}
-.tl-item h3{margin:2px 0 6px;font-size:1.12rem}
-.tl-item p{margin:0;color:var(--muted);max-width:70ch}
-
-/* tools */
-.filters{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:22px}
-.filters button{font:inherit;font-size:.9rem;padding:8px 14px;border-radius:99px;border:1px solid var(--line);background:#fff;color:var(--muted);cursor:pointer}
-.filters button.on{background:var(--ink);color:#fff;border-color:var(--ink)}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
-.tool{position:relative;background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:22px;display:flex;flex-direction:column;transition:transform .18s,box-shadow .18s,border-color .18s}
-.tool:hover{transform:translateY(-3px);box-shadow:0 14px 40px var(--glow);border-color:#cfdcf7}
-.tool .ico{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;font-size:1.3rem;background:linear-gradient(135deg,#eaf2ff,#e6faf7);margin-bottom:14px}
-.tool h3{margin:0 0 6px;font-size:1.08rem;letter-spacing:-.01em}
-.tool p{margin:0 0 14px;color:var(--muted);font-size:.95rem;flex:1}
-.tool .meta{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
-.tag{font-size:.76rem;font-weight:600;padding:4px 9px;border-radius:7px;background:var(--bg);color:var(--muted)}
-.status{font-size:.78rem;font-weight:600}
-.status.live{color:#0a8f5a} .status.dev{color:#b7791f}
-.tool a.open{position:absolute;inset:0;border-radius:var(--radius)}
-
-/* approach */
-.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
-.step{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);padding:20px}
-.step b{display:block;font-size:.8rem;color:var(--accent);letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px}
-.step p{margin:0;color:var(--muted);font-size:.94rem}
-@media(max-width:820px){.steps{grid-template-columns:1fr 1fr}}
-
-/* contact */
-.contact{background:linear-gradient(135deg,#0b1220,#13213d);color:#fff;border-radius:26px;padding:48px;position:relative;overflow:hidden}
-.contact::after{content:"";position:absolute;right:-120px;top:-120px;width:380px;height:380px;border-radius:50%;background:radial-gradient(circle,rgba(10,108,255,.45),transparent 65%)}
-.contact h2{color:#fff}.contact p{color:#b9c3d6;max-width:56ch}
-.contact .btn.ghost{background:transparent;color:#fff;border-color:rgba(255,255,255,.25)}
-footer{padding:36px 0 50px;color:var(--muted);font-size:.86rem;text-align:center}
+/* list / profile overlay */
+.over{position:fixed;inset:0;z-index:30;background:rgba(43,42,58,.35);backdrop-filter:blur(4px);display:flex;justify-content:center;align-items:flex-start;padding:24px 14px;overflow:auto;opacity:0;visibility:hidden;transition:opacity .3s,visibility .3s}
+.over.on{opacity:1;visibility:visible}
+.panel{position:relative;background:var(--card);border-radius:28px;max-width:860px;width:100%;padding:32px;box-shadow:var(--shadow);margin:auto 0}
+.panel h2{font-size:1.8rem;margin:0 0 6px}
+.panel h3{margin:26px 0 12px;font-size:1.15rem}
+.panel .lead{color:var(--muted);margin:0 0 6px}
+.tl{border-left:3px dashed #eadfcd;margin-left:8px;padding-left:22px}
+.tl div{position:relative;margin-bottom:18px}
+.tl div::before{content:"";position:absolute;left:-31px;top:4px;width:15px;height:15px;border-radius:50%;background:var(--orange);border:3px solid var(--card)}
+.tl b{font-family:Fredoka;font-weight:600;display:block}
+.tl small{color:var(--orange);font-weight:700}
+.tl p{margin:2px 0 0;color:#4a4860;font-size:.95rem}
+.chips{display:flex;flex-wrap:wrap;gap:7px}
+.chip{background:#f3ece0;border-radius:99px;padding:6px 11px;font-size:.84rem;font-weight:600}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}
+.tile{background:#fff;border:2px solid var(--line);border-radius:20px;padding:16px;text-align:left;color:var(--ink);transition:transform .15s,border-color .15s}
+.tile:hover{transform:translateY(-3px);border-color:#e3d3bb}
+.tile .e{font-size:1.5rem;height:34px;line-height:34px}
+.tile b{display:block;font-family:Fredoka;font-weight:600;margin:6px 0 4px}
+.tile span{font-size:.86rem;color:var(--muted)}
+.contactbox{background:linear-gradient(135deg,#fff1e6,#ffe7f0);border-radius:20px;padding:20px;display:flex;gap:12px;flex-wrap:wrap;align-items:center;justify-content:space-between}
+.toast{position:fixed;left:50%;top:84px;transform:translate(-50%,-30px);z-index:40;background:var(--ink);color:#fff;padding:12px 18px;border-radius:16px;font-weight:700;opacity:0;transition:all .4s;pointer-events:none;text-align:center}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+.loading{position:fixed;inset:0;display:grid;place-items:center;z-index:1;font-family:Fredoka;color:var(--muted)}
 </style>
 </head>
 <body>
+<div class="loading" id="loading">Bygger planeten…</div>
+<canvas id="c"></canvas>
 
-<nav><div class="wrap">
-  <a class="logo" href="#">Victor<span>.</span></a>
-  <ul>
-    <li><a href="#om">Om</a></li>
-    <li><a href="#erfarenhet">Erfarenhet</a></li>
-    <li><a href="#verktyg">Verktyg</a></li>
-    <li><a href="#kontakt">Kontakt</a></li>
-  </ul>
-</div></nav>
-
-<header class="hero"><div class="wrap">
-  <span class="eyebrow">Produktionsplanering · VDC · Digitalisering</span>
-  <h1>Jag gör komplex byggproduktion <em>planerbar och synlig</em>.</h1>
-  <p class="lead">Lead Planner och VDC-ansvarig i storskalig industribyggnation. Tolv år från projektering till produktion, och jag bygger de digitala verktyg som saknas när standardsystemen inte räcker.</p>
-  <div class="btns">
-    <a class="btn primary" href="#verktyg">Se verktygen →</a>
-    <a class="btn ghost" href="#kontakt">Kontakta mig</a>
+<!-- HUD -->
+<div class="hud" id="hud">
+  <div class="badge">
+    <div class="hat">👷</div>
+    <div><div class="name">Victor</div><div class="role">Lead Planner · VDC · Digitalisering</div></div>
   </div>
-  <div class="stats">
-    <div class="stat"><b>12 år</b><span>i byggbranschen</span></div>
-    <div class="stat"><b>10+ år</b><span>BIM/Tekla, programansvarig</span></div>
-    <div class="stat"><b>15–20</b><span>byggnadsverk samordnade i ett paket</span></div>
-    <div class="stat"><b>10+</b><span>egenutvecklade verktyg</span></div>
+  <div class="right">
+    <button class="pill" data-open="profil">Om mig</button>
+    <button class="pill" data-open="lista">Alla verktyg</button>
+    <button class="pill" data-open="kontakt">Kontakt</button>
   </div>
-</div></header>
+</div>
+<div class="progress" id="progress"><div class="badge">🏗️ <span id="pc">0/0</span> stationer <div class="bar"><i id="pb"></i></div></div></div>
+<div class="hint" id="hint">WASD / pilar för att gå · klicka på planeten eller en station</div>
+<div class="prompt" id="prompt"></div>
 
-<section id="om"><div class="wrap">
-  <h2>Om mig</h2>
-  <p class="sub">Jag har gjort arbetet själv – nu leder jag det, sprider kunskapen till de som producerar och styr helheten.</p>
-  <div class="about">
-    <div class="panel">
-      <h3>Från projektör till produktionsplanerare</h3>
-      <p>Efter många år som ledande projektör och teknikansvarig inom bro- och anläggningsprojekt bytte jag till entreprenadsidan för att påverka där det byggs. Jag var med och startade upp en ny satsning på grön industritransformation och har där ett helhetsansvar för planering i produktion: prioritering, samordning, arbetsfördelning och kvalitetssäkring.</p>
-      <p>Jag leder produktionsplaneringsmötet, tar fram 4–6-veckorsplaner, följer upp planerat mot utfört och driver allt VDC-arbete: modeller, ritningar, punktmoln, APD-planer, 4D och mängduppföljning.</p>
-    </div>
-    <div class="panel">
-      <h3>Verktyg och metoder</h3>
-      <div class="chips">
-        <span class="chip">Synchro 4D PRO</span><span class="chip">Primavera P6</span><span class="chip">Powerproject</span><span class="chip">MS Project</span>
-        <span class="chip">Tekla Structures</span><span class="chip">Trimble Connect</span><span class="chip">Revit</span><span class="chip">Navisworks</span>
-        <span class="chip">Bluebeam</span><span class="chip">Rhino/Grasshopper</span><span class="chip">CloudCompare</span><span class="chip">QGIS</span>
-        <span class="chip">Python</span><span class="chip">JavaScript/HTML</span><span class="chip">.NET/WPF</span><span class="chip">Claude API</span>
-      </div>
-    </div>
+<!-- Intro -->
+<div class="intro" id="intro">
+  <div class="card">
+    <span class="kicker">Portfolio · Verktygsnav</span>
+    <h1>Victor</h1>
+    <p>En liten planet. Ett stort bygge.<br>Någon måste planera det.</p>
+    <button class="go" id="go">Utforska planeten</button>
+    <button class="alt" data-open="lista">Snabbvy för den som har bråttom →</button>
+    <div class="keys">Gå med WASD eller piltangenter – eller klicka/tryck där du vill gå.</div>
   </div>
-</div></section>
+</div>
 
-<section id="erfarenhet" style="padding-top:20px"><div class="wrap">
-  <h2>Erfarenhet</h2>
-  <p class="sub">Ledarskap genom hela resan – från uppdragsledare till planeringsansvar i produktion.</p>
-  <div class="tl">
-    <div class="tl-item">
-      <div class="when">2025 – nu · NCC</div>
-      <h3>Lead Planner / VDC – Nytt Sovringsverk, LKAB Gällivare</h3>
-      <p>Helhetsansvar för planering i produktion i ett miljardprojekt. Veckoplanering av losshållning, produktionstidplaner, byggordning och prefab-workshops, APD- och logistikplaner, lotskartor, 4D-simulering och historisk 4D-jämförelse, lyftplanering och lägesbilder för byggmöten.</p>
-    </div>
-    <div class="tl-item">
-      <div class="when">2020 – 2025 · Sweco</div>
-      <h3>Teknikansvarig & ledande projektör, bro och anläggning</h3>
-      <p>Ledde team om 5–6 personer från förfrågan till granskade bygghandlingar och byggplatsuppföljning mot Trafikverket, med timbudget och uppföljning per uppdrag. Samordnade 15–20 byggnadsverk mot fast tidplan (Norrbotniabanan). Programansvarig för Tekla Structures inom anläggningskonstruktion i Sverige.</p>
-    </div>
-    <div class="tl-item">
-      <div class="when">2014 – 2020 · Ramboll</div>
-      <h3>Byggnadskonstruktör & uppdragsledare</h3>
-      <p>Stål, betong, limträ och KL-trä i 3D. Ledande projektör som fördelade och styrde arbete lokalt och mot team i Indien, och avslutningsvis uppdragsledare med direkt kundkontakt.</p>
-    </div>
-    <div class="tl-item">
-      <div class="when">2011 – 2014 · Högskolan i Gävle</div>
-      <h3>Byggnadsingenjör, arkitektur och miljö</h3>
-      <p>Genomförda studier.</p>
-    </div>
-  </div>
-</div></section>
+<!-- Station sheet -->
+<div class="sheet" id="sheet">
+  <button class="x" id="sx" aria-label="Stäng">✕</button>
+  <div class="top"><div class="emo" id="se"></div><div><div class="tag" id="st"></div><h2 id="sn"></h2></div></div>
+  <p id="sd"></p>
+  <div class="row"><span class="status" id="ss"></span><div id="sb"></div></div>
+</div>
 
-<section id="verktyg" style="padding-top:20px"><div class="wrap">
-  <h2>Verktygsnav</h2>
-  <p class="sub">Egna initiativ, byggda för att lösa verkliga problem i produktion. Varje verktyg är en fristående webbapp – öppna i webbläsaren, inget att installera.</p>
-  <div class="filters" id="filters">
-    <button class="on" data-f="alla">Alla</button>
-    <button data-f="planering">Planering & 4D</button>
-    <button data-f="bim">BIM & Trimble Connect</button>
-    <button data-f="dokument">Dokument & ritningar</button>
-    <button data-f="falt">Fält & visualisering</button>
-  </div>
-  <div class="grid" id="grid"></div>
-</div></section>
-
-<section style="padding-top:20px"><div class="wrap">
-  <h2>Så jobbar jag</h2>
-  <p class="sub">Från ett problem i produktionen till ett verktyg som används – utan stora IT-projekt.</p>
-  <div class="steps">
-    <div class="step"><b>1 · Problem</b><p>Börjar i en konkret flaskhals i produktion, inte i tekniken.</p></div>
-    <div class="step"><b>2 · MVP</b><p>Minsta möjliga version som bevisar värdet, ofta på en dag.</p></div>
-    <div class="step"><b>3 · Test i fält</b><p>Testas av de som ska använda det, enkelhet före funktioner.</p></div>
-    <div class="step"><b>4 · Skala</b><p>Det som fungerar byggs vidare och delas med fler projekt.</p></div>
-  </div>
-</div></section>
-
-<section id="kontakt"><div class="wrap">
-  <div class="contact">
-    <h2>Låt oss prata</h2>
-    <p>Intresserad av planering, VDC eller digitalisering av byggproduktion? Jag visar gärna verktygen live och berättar hur de används.</p>
-    <div class="btns" style="margin-top:22px">
-      <a class="btn primary" href="mailto:EPOST@EXEMPEL.SE">Skicka e-post</a>
-      <a class="btn ghost" href="https://www.linkedin.com/" target="_blank" rel="noopener">LinkedIn</a>
-    </div>
-  </div>
-</div></section>
-
-<footer>© <span id="yr"></span> Victor · Verktygen är egna initiativ och visas med demodata.</footer>
+<!-- Overlay -->
+<div class="over" id="over"><div class="panel" id="panel"></div></div>
+<div class="toast" id="toast"></div>
 
 <script>
-// Lägg till nya verktyg här. url: länk till demo (lämna tom = "Demo kommer").
+/* ======== INNEHÅLL – redigera här ======== */
+const PROFILE = {
+  name: "Victor",
+  email: "EPOST@EXEMPEL.SE",
+  linkedin: "https://www.linkedin.com/",
+};
+// url: länk till demo (tom = "demo kommer"). col: takfärg på stationen.
 const TOOLS = [
-  {ico:"📋", name:"Production Cockpit", cat:"planering", tag:"Planering",
-   desc:"Produktionstavla med dags-/veckovy, heatmap, interaktiv Gantt med beroenden och automatisk kaskad, samt AI-förslag på aktivitetsföljd.", status:"live", url:""},
-  {ico:"🔎", name:"Planeringskoll 4D", cat:"planering", tag:"Planering",
-   desc:"Ladda upp tidplansexport från 4D och få automatiska rimlighetskontroller: orimliga varaktigheter, valbart datumintervall och flaggor att agera på.", status:"live", url:""},
-  {ico:"↔️", name:"Före/Efter", cat:"falt", tag:"Visualisering",
-   desc:"Dra-reglage för att jämföra framdrift mellan två bilder, flera flikar och export till en läs-vy för presentation. Mycket uppskattad i projektet.", status:"live", url:""},
-  {ico:"📐", name:"Mängdavtagning från 4D", cat:"planering", tag:"Mängder",
-   desc:"Summerar volymer ur 4D-vyer och matchar grundskruvsgrupper från ritningstabeller mot rätt fundament.", status:"dev", url:""},
-  {ico:"🧩", name:"Trimble Connect-tillägg", cat:"bim", tag:"Trimble Connect",
-   desc:"Svit av tillägg via Workspace API: mätverktyg med volymberäkning, kommentarer, egenskapsetiketter och länkvisare direkt i modellen.", status:"live", url:""},
-  {ico:"🗺️", name:"PDF-overlay i modell", cat:"bim", tag:"Trimble Connect",
-   desc:"Lägg en ritning i 3D-modellen med 2–3 punkters kalibrering och exportera som IFC.", status:"live", url:""},
-  {ico:"📍", name:"Geotaggade platsfoton", cat:"bim", tag:"Trimble Connect",
-   desc:"Placerar platsfoton i modellen utifrån EXIF-position, omräknat till projektets koordinatsystem.", status:"live", url:""},
-  {ico:"🧠", name:"Platsminnet", cat:"bim", tag:"Trimble Connect",
-   desc:"Smart att-göra-lista där uppgifter kopplas till objekt, ritningar och foton i modellen.", status:"dev", url:""},
-  {ico:"📚", name:"BinderBuilder", cat:"dokument", tag:"Ritningar",
-   desc:"Bygger PDF-pärmar per område automatiskt ur ritningsleveranser, med senaste revision och klickbara länkar.", status:"live", url:""},
-  {ico:"🔄", name:"SharePoint-spegel", cat:"dokument", tag:"Dokument",
-   desc:"Speglar ett SharePoint-bibliotek till lokal disk med ett klick – bara nya och ändrade filer, utan adminrättigheter.", status:"dev", url:""},
-  {ico:"☁️", name:"Punktmolnsviewer", cat:"falt", tag:"Punktmoln",
-   desc:"Webbviewer för stora LAZ-punktmoln (1,4 GB+) med spelinspirerad navigering, koordinatavläsning och IFC i samma vy.", status:"live", url:""},
-  {ico:"🎙️", name:"Mötesprotokoll", cat:"dokument", tag:"Möten",
-   desc:"Spelar in möten, transkriberar lokalt utan AI-tjänster och tar fram protokoll med namngivna talare.", status:"dev", url:""},
+  {e:"📋", n:"Production Cockpit", t:"Planering", col:"#5b8cff", s:"live", url:"",
+   d:"Produktionstavla med dags- och veckovy, heatmap, interaktiv Gantt med beroenden och automatisk kaskad, plus AI-förslag på aktivitetsföljd."},
+  {e:"🔎", n:"Planeringskoll 4D", t:"Planering", col:"#5b8cff", s:"live", url:"",
+   d:"Ladda upp tidplansexporten från 4D och få automatiska rimlighetskontroller: orimliga varaktigheter, valbart datumintervall och flaggor att agera på."},
+  {e:"↔️", n:"Före/Efter", t:"Visualisering", col:"#ff7aa8", s:"live", url:"",
+   d:"Dra-reglage som jämför framdrift mellan två bilder, med flikar och export till en läs-vy för presentation. Mycket uppskattad ute i projektet."},
+  {e:"📐", n:"Mängdavtagning 4D", t:"Mängder", col:"#5b8cff", s:"dev", url:"",
+   d:"Summerar volymer ur 4D-vyer och matchar grundskruvsgrupper från ritningstabeller mot rätt fundament."},
+  {e:"🧩", n:"Trimble Connect-tillägg", t:"BIM", col:"#5cc28a", s:"live", url:"",
+   d:"En svit tillägg via Workspace API: mätverktyg med volymberäkning, kommentarer, egenskapsetiketter och länkvisare direkt i modellen."},
+  {e:"🗺️", n:"PDF-overlay i modell", t:"BIM", col:"#5cc28a", s:"live", url:"",
+   d:"Lägg en ritning i 3D-modellen med 2–3 punkters kalibrering och exportera den som IFC."},
+  {e:"📍", n:"Geotaggade platsfoton", t:"BIM", col:"#5cc28a", s:"live", url:"",
+   d:"Placerar platsfoton i modellen utifrån EXIF-position, omräknat till projektets koordinatsystem."},
+  {e:"🧠", n:"Platsminnet", t:"BIM", col:"#5cc28a", s:"dev", url:"",
+   d:"Smart att-göra-lista där uppgifter kopplas till objekt, ritningar och foton i modellen."},
+  {e:"📚", n:"BinderBuilder", t:"Ritningar", col:"#ffc94a", s:"live", url:"",
+   d:"Bygger PDF-pärmar per område automatiskt ur ritningsleveranser, med senaste revision och klickbara länkar."},
+  {e:"🔄", n:"SharePoint-spegel", t:"Dokument", col:"#ffc94a", s:"dev", url:"",
+   d:"Speglar ett SharePoint-bibliotek till lokal disk med ett klick – bara nya och ändrade filer, utan adminrättigheter."},
+  {e:"☁️", n:"Punktmolnsviewer", t:"Punktmoln", col:"#ff7aa8", s:"live", url:"",
+   d:"Webbviewer för stora LAZ-punktmoln (1,4 GB+) med spelinspirerad navigering, koordinatavläsning och IFC i samma vy."},
+  {e:"🎙️", n:"Mötesprotokoll", t:"Möten", col:"#ffc94a", s:"dev", url:"",
+   d:"Spelar in möten, transkriberar lokalt utan AI-tjänster och tar fram protokoll med namngivna talare."},
+];
+const SPECIAL = [
+  {e:"🏠", n:"Om mig", t:"Station", col:"#ff8a3d", special:"profil",
+   d:"Tolv år från projektering till produktion. Jag har gjort arbetet själv – nu leder jag det, sprider kunskapen och styr helheten."},
+  {e:"📮", n:"Brevlådan", t:"Kontakt", col:"#ff8a3d", special:"kontakt",
+   d:"Vill du se verktygen live eller prata planering, VDC och digitalisering? Släng iväg ett brev."},
 ];
 
-const grid = document.getElementById("grid");
-function render(f){
-  grid.innerHTML = TOOLS.filter(t=>f==="alla"||t.cat===f).map(t=>`
-    <article class="tool">
-      <div class="ico">${t.ico}</div>
-      <h3>${t.name}</h3>
-      <p>${t.desc}</p>
-      <div class="meta">
-        <span class="tag">${t.tag}</span>
-        <span class="status ${t.status}">${t.url ? "Öppna demo →" : (t.status==="live" ? "● I drift · demo kommer" : "● Under utveckling")}</span>
-      </div>
-      ${t.url ? `<a class="open" href="${t.url}" aria-label="Öppna ${t.name}"></a>` : ""}
-    </article>`).join("");
+const PROFIL_HTML = `
+  <h2>Om mig</h2>
+  <p class="lead">Lead Planner och VDC-ansvarig i storskalig industribyggnation. Jag gör komplex byggproduktion planerbar och synlig – och bygger verktygen som saknas när standardsystemen inte räcker.</p>
+  <h3>Erfarenhet</h3>
+  <div class="tl">
+    <div><small>2025 – nu · NCC</small><b>Lead Planner / VDC – Nytt Sovringsverk, LKAB Gällivare</b>
+      <p>Helhetsansvar för planering i produktion i ett miljardprojekt: veckoplanering, produktionstidplaner, byggordning och prefab-workshops, APD- och logistikplaner, lotskartor, 4D-simulering, lyftplanering och lägesbilder för byggmöten. Leder produktionsplaneringsmötet.</p></div>
+    <div><small>2020 – 2025 · Sweco</small><b>Teknikansvarig & ledande projektör, bro och anläggning</b>
+      <p>Ledde team om 5–6 personer från förfrågan till granskade bygghandlingar och byggplatsuppföljning mot Trafikverket, med timbudget per uppdrag. Samordnade 15–20 byggnadsverk mot fast tidplan. Programansvarig för Tekla Structures inom anläggningskonstruktion i Sverige.</p></div>
+    <div><small>2014 – 2020 · Ramboll</small><b>Byggnadskonstruktör & uppdragsledare</b>
+      <p>Ledande projektör som fördelade och styrde arbete lokalt och mot team i Indien, och avslutningsvis uppdragsledare med direkt kundkontakt.</p></div>
+    <div><small>2011 – 2014 · Högskolan i Gävle</small><b>Byggnadsingenjör, arkitektur och miljö</b><p>Genomförda studier.</p></div>
+  </div>
+  <h3>Verktyg och metoder</h3>
+  <div class="chips">${["Synchro 4D PRO","Primavera P6","Powerproject","MS Project","Tekla Structures","Trimble Connect","Revit","Navisworks","Bluebeam","Rhino/Grasshopper","CloudCompare","QGIS","Python","JavaScript",".NET/WPF","Claude API"].map(c=>`<span class="chip">${c}</span>`).join("")}</div>`;
+
+const KONTAKT_HTML = () => `
+  <h2>Kontakt</h2>
+  <p class="lead">Intresserad av planering, VDC eller digitalisering av byggproduktion? Jag visar gärna verktygen live.</p>
+  <div class="contactbox" style="margin-top:18px">
+    <b class="f" style="font-size:1.1rem">📮 Hör av dig</b>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <a class="btn p" style="text-decoration:none" href="mailto:${PROFILE.email}">Skicka e-post</a>
+      <a class="btn s" style="text-decoration:none" href="${PROFILE.linkedin}" target="_blank" rel="noopener">LinkedIn</a>
+    </div>
+  </div>`;
+
+/* ======== UI ======== */
+const $ = id => document.getElementById(id);
+const over = $("over"), panel = $("panel");
+let uiOpen = false;
+function openOverlay(kind){
+  let html = "";
+  if(kind==="profil") html = PROFIL_HTML;
+  else if(kind==="kontakt") html = KONTAKT_HTML();
+  else html = `<h2>Alla verktyg</h2><p class="lead">Egna initiativ, byggda för att lösa verkliga problem i produktion. Klicka för att läsa mer.</p>
+    <div class="grid" style="margin-top:16px">${TOOLS.map((t,i)=>`<button class="tile" data-tool="${i}"><div class="e">${t.e}</div><b>${t.n}</b><span>${t.d}</span></button>`).join("")}</div>
+    <h3>Om mig</h3>${PROFIL_HTML.replace("<h2>Om mig</h2>","")}${KONTAKT_HTML().replace("<h2>Kontakt</h2>","<h3>Kontakt</h3>")}`;
+  panel.innerHTML = `<button class="x" data-close aria-label="Stäng">✕</button>` + html;
+  over.classList.add("on"); uiOpen = true; closeSheet();
 }
-document.getElementById("filters").addEventListener("click",e=>{
-  const b=e.target.closest("button"); if(!b) return;
-  document.querySelectorAll("#filters button").forEach(x=>x.classList.toggle("on",x===b));
-  render(b.dataset.f);
+function closeOverlay(){ over.classList.remove("on"); uiOpen = false; }
+document.addEventListener("click", e=>{
+  const o = e.target.closest("[data-open]"); if(o){ openOverlay(o.dataset.open); return; }
+  if(e.target.closest("[data-close]") || e.target===over){ closeOverlay(); return; }
+  const t = e.target.closest("[data-tool]"); if(t){ closeOverlay(); showSheet(TOOLS[+t.dataset.tool]); }
 });
-render("alla");
-document.getElementById("yr").textContent=new Date().getFullYear();
+
+const sheet = $("sheet");
+let sheetItem = null;
+function showSheet(item){
+  sheetItem = item;
+  $("se").textContent = item.e; $("se").style.background = item.col + "33";
+  $("st").textContent = item.t; $("sn").textContent = item.n; $("sd").textContent = item.d;
+  const ss = $("ss"), sb = $("sb");
+  if(item.special){
+    ss.textContent = ""; ss.className = "status";
+    sb.innerHTML = `<button class="btn p" data-open="${item.special}">${item.special==="profil"?"Läs CV":"Kontakta mig"}</button>`;
+  } else {
+    ss.className = "status " + item.s;
+    ss.textContent = item.url ? "● Demo finns" : (item.s==="live" ? "● I drift · demo kommer" : "● Under utveckling");
+    sb.innerHTML = item.url ? `<a class="btn p" style="text-decoration:none" href="${item.url}" target="_blank" rel="noopener">Öppna demo →</a>` : "";
+    markVisited(item);
+  }
+  sheet.classList.add("on");
+}
+function closeSheet(){ sheet.classList.remove("on"); sheetItem = null; }
+$("sx").onclick = closeSheet;
+
+const visited = new Set();
+function updateProgress(){
+  $("pc").textContent = `${visited.size}/${TOOLS.length}`;
+  $("pb").style.width = (visited.size/TOOLS.length*100) + "%";
+}
+function markVisited(item){
+  if(visited.has(item.n)) return;
+  visited.add(item.n); updateProgress();
+  if(visited.size===TOOLS.length) toast("Alla stationer besökta! 🎉 Snyggt jobbat – hör av dig via brevlådan.");
+}
+function toast(msg){ const t=$("toast"); t.textContent=msg; t.classList.add("on"); setTimeout(()=>t.classList.remove("on"),4200); }
+updateProgress();
+
+function webglOK(){ try{ const c=document.createElement("canvas"); return !!(c.getContext("webgl2")||c.getContext("webgl")); }catch(e){ return false; } }
+window.__start = () => {};
+$("go").onclick = () => {
+  $("intro").classList.add("off");
+  ["hud","progress","hint"].forEach(id=>$(id).classList.add("on"));
+  window.__start();
+};
+if(!webglOK()){ $("loading").textContent=""; $("go").style.display="none"; openOverlay("lista"); }
+</script>
+
+<script type="module">
+import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js";
+
+const canvas = document.getElementById("c");
+const renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.outputColorSpace = THREE.SRGBColorSpace;
+
+const scene = new THREE.Scene();
+scene.fog = new THREE.Fog(0xd8ecff, 22, 46);
+const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 200);
+
+const R = 10;
+const UP = new THREE.Vector3(0,1,0);
+
+// ljus
+scene.add(new THREE.HemisphereLight(0xfff4e6, 0x8fb8ff, 1.15));
+const sun = new THREE.DirectionalLight(0xffffff, 1.7);
+sun.position.set(8, 22, 10);
+sun.castShadow = true;
+sun.shadow.mapSize.set(1024,1024);
+Object.assign(sun.shadow.camera, {left:-14,right:14,top:14,bottom:-14,near:1,far:50});
+sun.shadow.bias = -0.002;
+scene.add(sun);
+
+// seedad slump så planeten ser likadan ut varje gång
+let seed = 7;
+const rnd = () => (seed = (seed*16807) % 2147483647) / 2147483647;
+
+const mat = c => new THREE.MeshStandardMaterial({color:c, flatShading:true, roughness:.9});
+const planet = new THREE.Group();
+scene.add(planet);
+
+// planetkropp – lågpoly med lite ojämnhet
+const pg = new THREE.IcosahedronGeometry(R, 5);
+const pos = pg.attributes.position;
+const v = new THREE.Vector3();
+const bump = new Map();
+for(let i=0;i<pos.count;i++){
+  v.fromBufferAttribute(pos,i);
+  const k = `${v.x.toFixed(2)},${v.y.toFixed(2)},${v.z.toFixed(2)}`;
+  if(!bump.has(k)) bump.set(k, 1 + (rnd()-.5)*0.018);
+  v.multiplyScalar(bump.get(k));
+  pos.setXYZ(i, v.x, v.y, v.z);
+}
+pg.computeVertexNormals();
+const ground = new THREE.Mesh(pg, mat(0x9fd98b));
+ground.receiveShadow = true;
+planet.add(ground);
+
+function place(obj, dir, spin = rnd()*Math.PI*2, lift = 0){
+  dir = dir.clone().normalize();
+  obj.position.copy(dir).multiplyScalar(R + lift);
+  obj.quaternion.setFromUnitVectors(UP, dir);
+  obj.rotateY(spin);
+  planet.add(obj);
+  return obj;
+}
+const shadowAll = o => o.traverse(m=>{ if(m.isMesh){ m.castShadow = true; m.receiveShadow = true; } });
+
+// positioner: fibonacci-sfär, punkt 0 = start
+const ALL = [...SPECIAL_LIST(), ...TOOL_LIST()];
+function SPECIAL_LIST(){ return window.__SPECIAL; }
+function TOOL_LIST(){ return window.__TOOLS; }
+const N = ALL.length + 1;
+const dirs = [];
+for(let i=0;i<N;i++){
+  const y = 1 - (i/(N-1))*2, r = Math.sqrt(1-y*y), th = i*Math.PI*(3-Math.sqrt(5));
+  dirs.push(new THREE.Vector3(Math.cos(th)*r, y, Math.sin(th)*r));
+}
+const spawn = dirs[0];
+
+// emoji-skylt
+function emojiSprite(e, col){
+  const c = document.createElement("canvas"); c.width = c.height = 128;
+  const g = c.getContext("2d");
+  g.fillStyle = "#fffdf8"; g.beginPath(); g.arc(64,64,58,0,Math.PI*2); g.fill();
+  g.lineWidth = 8; g.strokeStyle = col; g.stroke();
+  g.font = "64px 'Apple Color Emoji','Segoe UI Emoji','Noto Color Emoji',sans-serif";
+  g.textAlign = "center"; g.textBaseline = "middle"; g.fillText(e, 64, 70);
+  const tex = new THREE.CanvasTexture(c); tex.colorSpace = THREE.SRGBColorSpace;
+  const s = new THREE.Sprite(new THREE.SpriteMaterial({map:tex, depthWrite:false}));
+  s.scale.set(1.1,1.1,1.1);
+  return s;
+}
+
+// stationer
+const stations = [];
+function makeStation(item){
+  const g = new THREE.Group();
+  const isHouse = item.special === "profil", isMail = item.special === "kontakt";
+  if(isMail){
+    const post = new THREE.Mesh(new THREE.CylinderGeometry(.08,.08,1,6), mat(0x7a5a43)); post.position.y=.5; g.add(post);
+    const box = new THREE.Mesh(new THREE.BoxGeometry(.7,.5,.45), mat(0xff8a3d)); box.position.y=1.15; g.add(box);
+    const lid = new THREE.Mesh(new THREE.CylinderGeometry(.225,.225,.7,10,1,false,0,Math.PI), mat(0xff8a3d));
+    lid.rotation.z = Math.PI/2; lid.position.y = 1.4; g.add(lid);
+    const flag = new THREE.Mesh(new THREE.BoxGeometry(.04,.35,.18), mat(0xff4d6d)); flag.position.set(.38,1.45,0); g.add(flag);
+  } else {
+    const w = isHouse ? 1.6 : 1.2 + rnd()*.3, h = isHouse ? 1.1 : .8 + rnd()*.5;
+    const body = new THREE.Mesh(new THREE.BoxGeometry(w,h,w*.85), mat(isHouse?0xfff1de:0xfffaf0)); body.position.y = h/2; g.add(body);
+    const roof = new THREE.Mesh(new THREE.ConeGeometry(w*.82, .7, 4), mat(new THREE.Color(item.col)));
+    roof.position.y = h + .35; roof.rotation.y = Math.PI/4; g.add(roof);
+    const door = new THREE.Mesh(new THREE.BoxGeometry(.32,.5,.04), mat(0x7a5a43)); door.position.set(0,.25,w*.425+.01); g.add(door);
+    const win = new THREE.Mesh(new THREE.BoxGeometry(.26,.22,.04), mat(0x9fd4ff));
+    win.position.set(w*.3, h*.62, w*.425+.01); g.add(win);
+    const win2 = win.clone(); win2.position.x = -w*.3; g.add(win2);
+  }
+  shadowAll(g);
+  const sign = emojiSprite(item.e, item.col);
+  sign.position.y = isMail ? 2.3 : 2.6;
+  g.add(sign);
+  g.traverse(m=>m.userData.station = item);
+  return {g, sign, item};
+}
+ALL.forEach((item, i) => {
+  const s = makeStation(item);
+  // låt dörren peka mot planetens "norr" ungefär
+  place(s.g, dirs[i+1], rnd()*Math.PI*2);
+  s.dir = dirs[i+1].clone();
+  s.baseY = s.sign.position.y;
+  stations.push(s);
+});
+
+// dekor
+const taken = [spawn, ...dirs.slice(1)];
+const free = d => taken.every(t => t.angleTo(d) > 0.2);
+function randDir(){ return new THREE.Vector3(rnd()*2-1, rnd()*2-1, rnd()*2-1).normalize(); }
+function tree(){
+  const g = new THREE.Group();
+  const trunk = new THREE.Mesh(new THREE.CylinderGeometry(.08,.11,.5,5), mat(0x8a5a3b)); trunk.position.y=.25; g.add(trunk);
+  const greens = [0x4fae6a,0x6cc47a,0x3e9b5f,0x7ed38b];
+  const s = .7 + rnd()*.6;
+  const c1 = new THREE.Mesh(new THREE.ConeGeometry(.5*s, 1*s, 6), mat(greens[Math.floor(rnd()*4)])); c1.position.y = .5+.45*s; g.add(c1);
+  if(rnd()>.4){ const c2 = c1.clone(); c2.scale.setScalar(.7); c2.position.y += .45*s; g.add(c2); }
+  shadowAll(g); return g;
+}
+function rock(){ const m = new THREE.Mesh(new THREE.DodecahedronGeometry(.18+rnd()*.25,0), mat(0xc9c2d6)); m.position.y=.1; shadowAll(m); return m; }
+function flower(){
+  const g = new THREE.Group();
+  const cols = [0xff7aa8,0xffc94a,0xffffff,0x9b8cff];
+  const m = new THREE.Mesh(new THREE.IcosahedronGeometry(.08,0), mat(cols[Math.floor(rnd()*4)]));
+  m.position.y=.12; g.add(m); return g;
+}
+function crane(){
+  const g = new THREE.Group(), y = 0xffc23d;
+  const H = 4 + rnd()*1.5;
+  const mast = new THREE.Mesh(new THREE.BoxGeometry(.28,H,.28), mat(y)); mast.position.y = H/2; g.add(mast);
+  const jib = new THREE.Mesh(new THREE.BoxGeometry(4,.2,.22), mat(y)); jib.position.set(1.2,H+.1,0); g.add(jib);
+  const cab = new THREE.Mesh(new THREE.BoxGeometry(.45,.4,.4), mat(0xffffff)); cab.position.set(0,H-.15,.3); g.add(cab);
+  const cw = new THREE.Mesh(new THREE.BoxGeometry(.5,.4,.4), mat(0x7d7a8c)); cw.position.set(-.6,H-.05,0); g.add(cw);
+  const line = new THREE.Mesh(new THREE.CylinderGeometry(.02,.02,1.6,4), mat(0x555555)); line.position.set(2.6,H-.7,0); g.add(line);
+  const load = new THREE.Mesh(new THREE.BoxGeometry(.4,.3,.4), mat(0x5b8cff)); load.position.set(2.6,H-1.6,0); g.add(load);
+  const base = new THREE.Mesh(new THREE.BoxGeometry(1,.2,1), mat(0x9a96aa)); base.position.y=.1; g.add(base);
+  shadowAll(g); g.userData.jib = true; return g;
+}
+const cranes = [];
+for(let i=0;i<3;i++){
+  let d; do { d = randDir(); } while(!free(d) || taken.some(t=>t.angleTo(d)<.32));
+  const c = crane(); place(c, d); cranes.push(c); taken.push(d);
+}
+for(let i=0;i<110;i++){ const d = randDir(); if(free(d)) place(tree(), d); }
+for(let i=0;i<40;i++){ const d = randDir(); if(free(d)) place(rock(), d); }
+for(let i=0;i<120;i++){ const d = randDir(); if(taken.every(t=>t.angleTo(d)>.12)) place(flower(), d); }
+
+// moln
+const clouds = new THREE.Group(); scene.add(clouds);
+for(let i=0;i<9;i++){
+  const c = new THREE.Group();
+  const n = 3 + Math.floor(rnd()*3);
+  for(let j=0;j<n;j++){
+    const p = new THREE.Mesh(new THREE.IcosahedronGeometry(.5+rnd()*.5,1), new THREE.MeshStandardMaterial({color:0xffffff, flatShading:true, roughness:1}));
+    p.position.set(j*.6-n*.3, rnd()*.3, rnd()*.4); c.add(p);
+  }
+  const d = randDir(); c.position.copy(d).multiplyScalar(R+5+rnd()*2);
+  c.lookAt(0,0,0); clouds.add(c);
+}
+
+// spelaren – liten figur med bygghjälm
+const player = new THREE.Group();
+const body = new THREE.Mesh(new THREE.CapsuleGeometry(.26,.34,4,8), mat(0x5b8cff)); body.position.y=.62; player.add(body);
+const vest = new THREE.Mesh(new THREE.CylinderGeometry(.285,.285,.22,10), mat(0xff8a3d)); vest.position.y=.7; player.add(vest);
+const head = new THREE.Mesh(new THREE.SphereGeometry(.24,12,10), mat(0xffd9b8)); head.position.y=1.15; player.add(head);
+const helm = new THREE.Mesh(new THREE.SphereGeometry(.27,12,8,0,Math.PI*2,0,Math.PI/2), mat(0xffc23d)); helm.position.y=1.2; player.add(helm);
+const brim = new THREE.Mesh(new THREE.CylinderGeometry(.33,.33,.04,14), mat(0xffc23d)); brim.position.set(0,1.21,-.05); player.add(brim);
+const eyeM = mat(0x2b2a3a);
+const e1 = new THREE.Mesh(new THREE.SphereGeometry(.03,6,6), eyeM); e1.position.set(.08,1.15,-.22); player.add(e1);
+const e2 = e1.clone(); e2.position.x = -.08; player.add(e2);
+const legM = mat(0x3c3b55);
+const l1 = new THREE.Mesh(new THREE.BoxGeometry(.12,.3,.12), legM); l1.position.set(.11,.18,0); player.add(l1);
+const l2 = l1.clone(); l2.position.x = -.11; player.add(l2);
+shadowAll(player);
+player.position.set(0, R, 0);
+scene.add(player);
+const shadowBlob = new THREE.Mesh(new THREE.CircleGeometry(.4,16), new THREE.MeshBasicMaterial({color:0x000000, transparent:true, opacity:.12}));
+shadowBlob.rotation.x = -Math.PI/2; shadowBlob.position.set(0,R+.02,0); scene.add(shadowBlob);
+
+// starta med spawn-punkten högst upp
+planet.quaternion.setFromUnitVectors(spawn, UP);
+
+// kamera
+function resize(){
+  const w = innerWidth, h = innerHeight;
+  renderer.setSize(w, h, false);
+  camera.aspect = w/h;
+  const far = w < 700 ? 1.35 : 1;
+  camera.position.set(0, R + 7.5*far, 11.5*far);
+  camera.lookAt(0, R - 1.2, -2);
+  camera.updateProjectionMatrix();
+}
+addEventListener("resize", resize); resize();
+
+// input
+const keys = {};
+let started = false, target = null, pendingOpen = null, near = null;
+addEventListener("keydown", e => {
+  keys[e.key.toLowerCase()] = true;
+  if((e.key==="e"||e.key==="E"||e.key==="Enter") && near && started){ window.__showSheet(near.item); }
+  if(e.key==="Escape"){ window.__closeAll(); }
+});
+addEventListener("keyup", e => keys[e.key.toLowerCase()] = false);
+
+const ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
+let downAt = null;
+canvas.addEventListener("pointerdown", e => downAt = {x:e.clientX, y:e.clientY});
+canvas.addEventListener("pointerup", e => {
+  if(!started || !downAt) return;
+  if(Math.hypot(e.clientX-downAt.x, e.clientY-downAt.y) > 8) return;
+  ndc.set(e.clientX/innerWidth*2-1, -(e.clientY/innerHeight)*2+1);
+  ray.setFromCamera(ndc, camera);
+  const hits = ray.intersectObjects(planet.children, true);
+  if(!hits.length) return;
+  const st = hits[0].object.userData.station;
+  if(st){
+    const s = stations.find(x=>x.item===st);
+    // gå till punkten framför stationen
+    target = s.dir.clone(); pendingOpen = s;
+  } else {
+    target = planet.worldToLocal(hits[0].point.clone()).normalize();
+    pendingOpen = null;
+  }
+  window.__closeSheet();
+});
+
+// spel-loop
+const clock = new THREE.Clock();
+const prompt = document.getElementById("prompt");
+let walkT = 0, facing = 0;
+const tmp = new THREE.Vector3(), tmpQ = new THREE.Quaternion();
+function rotateToward(dirWorld, step){
+  const axis = tmp.copy(dirWorld).cross(UP);
+  const len = axis.length(); if(len < 1e-5) return 0;
+  axis.divideScalar(len);
+  const ang = dirWorld.angleTo(UP);
+  const s = Math.min(step, ang);
+  planet.quaternion.premultiply(tmpQ.setFromAxisAngle(axis, s));
+  return ang - s;
+}
+function loop(){
+  const dt = Math.min(clock.getDelta(), .05);
+  const t = clock.elapsedTime;
+  let moving = false;
+
+  if(started && !window.__uiOpen()){
+    let x = 0, z = 0;
+    if(keys["w"]||keys["arrowup"]) z -= 1;
+    if(keys["s"]||keys["arrowdown"]) z += 1;
+    if(keys["a"]||keys["arrowleft"]) x -= 1;
+    if(keys["d"]||keys["arrowright"]) x += 1;
+    const speed = 0.36 * dt; // rad/s
+    if(x||z){
+      target = null; pendingOpen = null;
+      const f = new THREE.Vector3(x,0,z).normalize();
+      facing = Math.atan2(-f.x, -f.z);
+      const dir = f.clone().multiplyScalar(.2).add(UP).normalize(); // punkt strax framför
+      rotateToward(dir, speed);
+      moving = true;
+    } else if(target){
+      const w = target.clone().applyQuaternion(planet.quaternion);
+      const flat = new THREE.Vector3(w.x,0,w.z);
+      if(flat.lengthSq() > 1e-6) facing = Math.atan2(-flat.x, -flat.z);
+      // stanna strax före stationen
+      const stopAt = pendingOpen ? 0.13 : 0.01;
+      const left = w.angleTo(UP);
+      if(left > stopAt){ rotateToward(w, Math.min(speed*1.4, left-stopAt)); moving = true; }
+      else { if(pendingOpen){ window.__showSheet(pendingOpen.item); } target = null; pendingOpen = null; }
+    }
+  }
+
+  // figuren
+  let d = facing - player.rotation.y; d = Math.atan2(Math.sin(d), Math.cos(d));
+  player.rotation.y += d * Math.min(1, dt*12);
+  walkT += moving ? dt*12 : 0;
+  const sw = moving ? Math.sin(walkT) : 0;
+  l1.rotation.x = sw*.6; l2.rotation.x = -sw*.6;
+  body.position.y = .62 + (moving ? Math.abs(Math.sin(walkT))*.05 : Math.sin(t*2)*.01);
+
+  // stationer: guppande skyltar + närhet
+  near = null; let best = 1e9;
+  for(const s of stations){
+    s.sign.position.y = s.baseY + Math.sin(t*2 + s.dir.x*5)*.12;
+    const wp = s.g.getWorldPosition(tmp);
+    const dist = wp.distanceTo(player.position);
+    if(dist < 2.6 && dist < best){ best = dist; near = s; }
+  }
+  if(near && started && !window.__uiOpen() && !window.__sheetOpen()){
+    const p = near.sign.getWorldPosition(new THREE.Vector3()).project(camera);
+    prompt.style.display = "block";
+    prompt.style.left = ((p.x+1)/2*innerWidth) + "px";
+    prompt.style.top = ((1-p.y)/2*innerHeight - 30) + "px";
+    prompt.innerHTML = `${near.item.n}<kbd>E</kbd>`;
+    prompt.onclick = () => window.__showSheet(near.item);
+  } else prompt.style.display = "none";
+
+  clouds.rotation.y += dt*.02; clouds.rotation.x += dt*.006;
+  if(!started) planet.rotateOnWorldAxis(UP, dt*.12);
+
+  renderer.render(scene, camera);
+  requestAnimationFrame(loop);
+}
+document.getElementById("loading").remove();
+loop();
+
+window.__start = () => {
+  started = true;
+  // tillbaka till spawn snyggt: nollställ fri rotation
+  planet.quaternion.setFromUnitVectors(spawn, UP);
+};
+</script>
+<script>
+// broar mellan UI-skriptet och 3D-modulen
+window.__TOOLS = TOOLS; window.__SPECIAL = SPECIAL;
+window.__showSheet = item => showSheet(item);
+window.__closeSheet = () => closeSheet();
+window.__closeAll = () => { closeSheet(); closeOverlay(); };
+window.__uiOpen = () => uiOpen;
+window.__sheetOpen = () => sheet.classList.contains("on");
 </script>
 </body>
 </html>
