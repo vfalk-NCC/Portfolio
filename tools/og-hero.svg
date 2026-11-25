@@ -1,0 +1,60 @@
+<svg class="bldg" id="bldg" viewBox="-200 -75 484 325" role="img" aria-labelledby="bldg-t bldg-d">
+<title id="bldg-t">Axonometrisk ritning av en generisk industrihall</title>
+<desc id="bldg-d">Hallens delar får statusfärg efter tidplanens vecka: planerad, pågår, klar eller försenad. I vecka 18 ligger väggarna efter plan.</desc>
+<g class="grid" aria-hidden="true"><line class="ax" x1="23.4" y1="-13.5" x2="-145" y2="83.7"/><line class="ax" x1="79.5" y1="18.9" x2="-88.9" y2="116.1"/><line class="ax" x1="135.6" y1="51.3" x2="-32.7" y2="148.5"/><line class="ax" x1="191.7" y1="83.7" x2="23.4" y2="180.9"/><line class="ax" x1="247.9" y1="116.1" x2="79.5" y2="213.3"/><line class="ax" x1="-23.4" y1="-13.5" x2="257.2" y2="148.5"/><line class="ax" x1="-79.5" y1="18.9" x2="201.1" y2="180.9"/><line class="ax" x1="-135.6" y1="51.3" x2="145" y2="213.3"/></g>
+<g class="parts"><polygon class="el d k-slab" data-a="1" data-pw="1" data-w="1" points="0,0 56.1,32.4 -56.1,97.2 -112.2,64.8"/>
+<polygon class="el d k-slab" data-a="1" data-pw="2" data-w="2" points="56.1,32.4 112.2,64.8 0,129.6 -56.1,97.2"/>
+<polygon class="el d k-slab" data-a="1" data-pw="3" data-w="3" points="112.2,64.8 168.4,97.2 56.1,162 0,129.6"/>
+<polygon class="el d k-slab" data-a="1" data-pw="4" data-w="4" points="168.4,97.2 224.5,129.6 112.2,194.4 56.1,162"/>
+<polygon class="el o k-wall" data-a="6" data-pw="13" data-w="15" points="168.4,97.2 224.5,129.6 224.5,64.8 168.4,32.4"/>
+<polygon class="el o k-wall" data-a="6" data-pw="14" data-w="16" points="112.2,64.8 168.4,97.2 168.4,32.4 112.2,0"/>
+<polygon class="el o k-wall" data-a="6" data-pw="15" data-w="17" points="56.1,32.4 112.2,64.8 112.2,0 56.1,-32.4"/>
+<polygon class="el l k-wall" data-a="6" data-pw="16" data-w="19" points="0,0 56.1,32.4 56.1,-32.4 0,-64.8"/>
+<polygon class="el l k-wall" data-a="6" data-pw="17" data-w="20" points="0,0 -56.1,32.4 -56.1,-48.6 0,-64.8"/>
+<polygon class="el l k-wall" data-a="6" data-pw="18" data-w="21" points="-56.1,32.4 -112.2,64.8 -112.2,0 -56.1,-48.6"/>
+<g class="el p k-door" data-a="7" data-pw="20" data-w="20"><polygon points="70.1,40.5 98.2,56.7 98.2,21.6 70.1,5.4"/><line class="k-in" x1="70.1" y1="31.9" x2="98.2" y2="48.1"/><line class="k-in" x1="70.1" y1="23.2" x2="98.2" y2="39.4"/><line class="k-in" x1="70.1" y1="14.6" x2="98.2" y2="30.8"/></g>
+<g class="el p k-door" data-a="7" data-pw="21" data-w="21"><polygon points="182.4,105.3 210.4,121.5 210.4,86.4 182.4,70.2"/><line class="k-in" x1="182.4" y1="96.7" x2="210.4" y2="112.9"/><line class="k-in" x1="182.4" y1="88" x2="210.4" y2="104.2"/><line class="k-in" x1="182.4" y1="79.4" x2="210.4" y2="95.6"/></g>
+<line class="el d k-col" data-a="2" data-pw="4" data-w="4" x1="0" y1="0" x2="0" y2="-64.8"/>
+<line class="el d k-col" data-a="2" data-pw="4" data-w="4" x1="-56.1" y1="32.4" x2="-56.1" y2="-48.6"/>
+<line class="el d k-col" data-a="2" data-pw="4" data-w="4" x1="-112.2" y1="64.8" x2="-112.2" y2="0"/>
+<line class="el d k-col" data-a="2" data-pw="5" data-w="5" x1="56.1" y1="32.4" x2="56.1" y2="-32.4"/>
+<line class="el d k-col" data-a="2" data-pw="5" data-w="5" x1="0" y1="64.8" x2="0" y2="-16.2"/>
+<line class="el d k-col" data-a="2" data-pw="5" data-w="5" x1="-56.1" y1="97.2" x2="-56.1" y2="32.4"/>
+<line class="el d k-col" data-a="2" data-pw="6" data-w="6" x1="112.2" y1="64.8" x2="112.2" y2="0"/>
+<line class="el d k-col" data-a="2" data-pw="6" data-w="6" x1="56.1" y1="97.2" x2="56.1" y2="16.2"/>
+<line class="el d k-col" data-a="2" data-pw="6" data-w="6" x1="0" y1="129.6" x2="0" y2="64.8"/>
+<line class="el d k-col" data-a="2" data-pw="7" data-w="7" x1="168.4" y1="97.2" x2="168.4" y2="32.4"/>
+<line class="el d k-col" data-a="2" data-pw="7" data-w="7" x1="112.2" y1="129.6" x2="112.2" y2="48.6"/>
+<line class="el d k-col" data-a="2" data-pw="7" data-w="7" x1="56.1" y1="162" x2="56.1" y2="97.2"/>
+<line class="el d k-col" data-a="2" data-pw="8" data-w="8" x1="224.5" y1="129.6" x2="224.5" y2="64.8"/>
+<line class="el d k-col" data-a="2" data-pw="8" data-w="8" x1="168.4" y1="162" x2="168.4" y2="81"/>
+<line class="el d k-col" data-a="2" data-pw="8" data-w="8" x1="112.2" y1="194.4" x2="112.2" y2="129.6"/>
+<line class="el d k-beam" data-a="3" data-pw="6" data-w="6" x1="0" y1="-64.8" x2="56.1" y2="-32.4"/>
+<line class="el d k-beam" data-a="3" data-pw="6" data-w="6" x1="-112.2" y1="0" x2="-56.1" y2="32.4"/>
+<line class="el d k-beam" data-a="3" data-pw="6" data-w="6" x1="-56.1" y1="-48.6" x2="0" y2="-16.2"/>
+<line class="el d k-beam" data-a="3" data-pw="7" data-w="7" x1="56.1" y1="-32.4" x2="112.2" y2="0"/>
+<line class="el d k-beam" data-a="3" data-pw="7" data-w="7" x1="-56.1" y1="32.4" x2="0" y2="64.8"/>
+<line class="el d k-beam" data-a="3" data-pw="8" data-w="8" x1="0" y1="-16.2" x2="56.1" y2="16.2"/>
+<line class="el d k-beam" data-a="3" data-pw="8" data-w="8" x1="112.2" y1="0" x2="168.4" y2="32.4"/>
+<line class="el d k-beam" data-a="3" data-pw="8" data-w="8" x1="0" y1="64.8" x2="56.1" y2="97.2"/>
+<line class="el d k-beam" data-a="3" data-pw="9" data-w="9" x1="56.1" y1="16.2" x2="112.2" y2="48.6"/>
+<line class="el d k-beam" data-a="3" data-pw="9" data-w="9" x1="168.4" y1="32.4" x2="224.5" y2="64.8"/>
+<line class="el d k-beam" data-a="3" data-pw="10" data-w="10" x1="56.1" y1="97.2" x2="112.2" y2="129.6"/>
+<line class="el d k-beam" data-a="3" data-pw="10" data-w="10" x1="112.2" y1="48.6" x2="168.4" y2="81"/>
+<polyline class="el d k-raft" data-a="4" data-pw="9" data-w="9" points="0,-64.8 -56.1,-48.6 -112.2,0"/>
+<polyline class="el d k-raft" data-a="4" data-pw="10" data-w="10" points="56.1,-32.4 0,-16.2 -56.1,32.4"/>
+<polyline class="el d k-raft" data-a="4" data-pw="11" data-w="11" points="112.2,0 56.1,16.2 0,64.8"/>
+<polyline class="el d k-raft" data-a="4" data-pw="12" data-w="12" points="168.4,32.4 112.2,48.6 56.1,97.2"/>
+<polyline class="el d k-raft" data-a="4" data-pw="13" data-w="13" points="224.5,64.8 168.4,81 112.2,129.6"/>
+<polygon class="el d k-roof" data-a="5" data-pw="12" data-w="12" points="0,-64.8 56.1,-32.4 0,-16.2 -56.1,-48.6"/>
+<polygon class="el d k-roof" data-a="5" data-pw="12" data-w="12" points="-56.1,-48.6 0,-16.2 -56.1,32.4 -112.2,0"/>
+<polygon class="el d k-roof" data-a="5" data-pw="13" data-w="13" points="56.1,-32.4 112.2,0 56.1,16.2 0,-16.2"/>
+<polygon class="el d k-roof" data-a="5" data-pw="13" data-w="13" points="0,-16.2 56.1,16.2 0,64.8 -56.1,32.4"/>
+<polygon class="el d k-roof" data-a="5" data-pw="14" data-w="14" points="112.2,0 168.4,32.4 112.2,48.6 56.1,16.2"/>
+<polygon class="el d k-roof" data-a="5" data-pw="15" data-w="15" points="56.1,16.2 112.2,48.6 56.1,97.2 0,64.8"/>
+<polygon class="el d k-roof" data-a="5" data-pw="15" data-w="15" points="168.4,32.4 224.5,64.8 168.4,81 112.2,48.6"/>
+<polygon class="el d k-roof" data-a="5" data-pw="16" data-w="16" points="112.2,48.6 168.4,81 112.2,129.6 56.1,97.2"/>
+<g class="el p k-unit" data-a="7" data-pw="22" data-w="22"><polygon points="-39.8,-2.4 -16.4,11.1 -16.4,-0.8 -39.8,-14.3"/><polygon points="0,1.6 -16.4,11.1 -16.4,-0.8 0,-10.3"/><polygon points="-23.4,-23.8 0,-10.3 -16.4,-0.8 -39.8,-14.3"/></g>
+<g class="el p k-unit" data-a="7" data-pw="23" data-w="23"><polygon points="63.1,57 86.5,70.5 86.5,58.6 63.1,45.1"/><polygon points="102.9,61 86.5,70.5 86.5,58.6 102.9,49.1"/><polygon points="79.5,35.6 102.9,49.1 86.5,58.6 63.1,45.1"/></g></g>
+<g aria-hidden="true"><circle class="bub" cx="-159" cy="91.8" r="7.5"/><text class="bt" x="-159" y="95">1</text><circle class="bub" cx="-102.9" cy="124.2" r="7.5"/><text class="bt" x="-102.9" y="127.4">2</text><circle class="bub" cx="-46.8" cy="156.6" r="7.5"/><text class="bt" x="-46.8" y="159.8">3</text><circle class="bub" cx="9.4" cy="189" r="7.5"/><text class="bt" x="9.4" y="192.2">4</text><circle class="bub" cx="65.5" cy="221.4" r="7.5"/><text class="bt" x="65.5" y="224.6">5</text><circle class="bub" cx="271.2" cy="156.6" r="7.5"/><text class="bt" x="271.2" y="159.8">A</text><circle class="bub" cx="215.1" cy="189" r="7.5"/><text class="bt" x="215.1" y="192.2">B</text><circle class="bub" cx="159" cy="221.4" r="7.5"/><text class="bt" x="159" y="224.6">C</text><g class="dim"><line x1="-187.1" y1="108" x2="37.4" y2="237.6"/><line x1="-190.1" y1="111" x2="-184.1" y2="105"/><line x1="34.4" y1="240.6" x2="40.4" y2="234.6"/></g></g>
+</svg>

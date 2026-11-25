@@ -1,627 +1,435 @@
 <!DOCTYPE html>
+<!-- Genererad av tools/gen.js. Redigera tools/index.src.html och kör: node tools/gen.js -->
 <html lang="sv">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
-<title>Victor – En liten planet. Ett stort bygge.</title>
-<meta name="description" content="Interaktiv portfolio: produktionsplanering, VDC och egenutvecklade digitala verktyg för byggproduktion.">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@400;600;700&display=swap" rel="stylesheet">
-<style>
-:root{
-  --ink:#2b2a3a; --muted:#6c6a80; --card:#fffdf8; --line:#efe7da;
-  --orange:#ff8a3d; --blue:#5b8cff; --green:#5cc28a; --pink:#ff7aa8; --yellow:#ffc94a;
-  --shadow:0 18px 50px rgba(70,60,110,.18);
-}
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{margin:0;height:100%;overflow:hidden;font-family:Nunito,system-ui,sans-serif;color:var(--ink)}
-body{background:linear-gradient(180deg,#a9d8ff 0%,#cfe8ff 45%,#ffe6cf 100%)}
-canvas#c{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:pointer}
-h1,h2,h3,.f{font-family:Fredoka,Nunito,sans-serif;letter-spacing:-.01em}
-button{font:inherit;cursor:pointer;border:0}
-
-/* HUD */
-.hud{position:fixed;left:0;right:0;top:0;display:flex;justify-content:space-between;align-items:flex-start;padding:16px;pointer-events:none;z-index:5;opacity:0;transition:opacity .6s}
-.hud.on{opacity:1}
-.hud>*{pointer-events:auto}
-.badge{background:rgba(255,253,248,.92);backdrop-filter:blur(8px);border-radius:16px;padding:10px 14px;box-shadow:var(--shadow);display:flex;align-items:center;gap:10px}
-.badge .name{font-family:Fredoka;font-weight:700;font-size:1.15rem}
-.badge .role{font-size:.78rem;color:var(--muted);line-height:1.2}
-.hat{width:34px;height:34px;border-radius:50%;background:var(--orange);display:grid;place-items:center;font-size:1.05rem}
-.right{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end}
-.pill{background:rgba(255,253,248,.92);backdrop-filter:blur(8px);border-radius:99px;padding:10px 15px;font-weight:700;font-size:.88rem;box-shadow:var(--shadow);color:var(--ink);transition:transform .15s}
-.pill:hover{transform:translateY(-2px)}
-.progress{position:fixed;left:16px;bottom:16px;z-index:5;opacity:0;transition:opacity .6s}
-.progress.on{opacity:1}
-.progress .badge{font-weight:700;font-size:.88rem}
-.bar{width:110px;height:8px;border-radius:9px;background:#efe7da;overflow:hidden}
-.bar i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--orange),var(--pink));border-radius:9px;transition:width .5s}
-.hint{position:fixed;right:16px;bottom:16px;z-index:5;font-size:.8rem;color:var(--muted);background:rgba(255,253,248,.85);padding:8px 12px;border-radius:12px;opacity:0;transition:opacity .6s}
-.hint.on{opacity:1}
-.hud{padding:calc(12px + env(safe-area-inset-top)) calc(12px + env(safe-area-inset-right)) 12px calc(12px + env(safe-area-inset-left))}
-.progress{bottom:calc(14px + env(safe-area-inset-bottom))}
-.sheet{bottom:calc(14px + env(safe-area-inset-bottom))}
-@media(max-width:640px){.hint{display:none}.badge .name,.badge .role{display:none}.badge{padding:7px}.right{gap:6px;flex-wrap:nowrap}.pill{padding:9px 12px;font-size:.8rem;white-space:nowrap}.progress{left:12px}.sheet{padding:18px 18px 16px}.sheet h2{font-size:1.2rem}}
-
-/* prompt over station */
-.prompt{position:fixed;z-index:6;transform:translate(-50%,-100%);background:var(--ink);color:#fff;font-family:Fredoka;font-weight:600;font-size:.92rem;padding:8px 14px;border-radius:14px;white-space:nowrap;pointer-events:auto;display:none;box-shadow:0 10px 30px rgba(0,0,0,.2);animation:bob 1.6s ease-in-out infinite}
-.prompt::after{content:"";position:absolute;left:50%;bottom:-6px;transform:translateX(-50%);border:6px solid transparent;border-top-color:var(--ink);border-bottom:0}
-.prompt kbd{background:rgba(255,255,255,.18);border-radius:6px;padding:1px 6px;margin-left:6px;font-family:inherit}
-@keyframes bob{50%{margin-top:-5px}}
-
-/* intro */
-.intro{position:fixed;inset:0;z-index:20;display:grid;place-items:center;padding:20px;transition:opacity .7s,visibility .7s}
-.intro.off{opacity:0;visibility:hidden}
-.intro .card{background:rgba(255,253,248,.94);backdrop-filter:blur(10px);border-radius:28px;padding:34px 34px 28px;max-width:440px;text-align:center;box-shadow:var(--shadow)}
-.kicker{display:inline-block;font-size:.74rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--orange);background:#fff1e6;padding:6px 12px;border-radius:99px}
-.intro h1{font-size:3rem;margin:14px 0 4px}
-.intro p{color:var(--muted);margin:0 0 24px;font-size:1.06rem}
-.go{background:var(--orange);color:#fff;font-family:Fredoka;font-weight:600;font-size:1.15rem;padding:15px 30px;border-radius:18px;box-shadow:0 10px 0 #d86a22,0 18px 30px rgba(255,138,61,.35);transition:transform .1s,box-shadow .1s}
-.go:active{transform:translateY(6px);box-shadow:0 4px 0 #d86a22}
-.alt{display:block;margin:20px auto 0;background:none;color:var(--muted);font-weight:700;text-decoration:underline;text-underline-offset:3px}
-.keys{margin-top:18px;font-size:.8rem;color:var(--muted)}
-
-/* sheet (station info) */
-.sheet{position:fixed;left:50%;bottom:20px;z-index:10;width:min(520px,calc(100% - 24px));transform:translate(-50%,130%);transition:transform .45s cubic-bezier(.2,1.3,.4,1);background:var(--card);border-radius:26px;box-shadow:var(--shadow);padding:22px 22px 20px}
-.sheet.on{transform:translate(-50%,0)}
-.sheet .top{display:flex;gap:14px;align-items:center;margin-bottom:10px}
-.sheet .emo{width:58px;height:58px;flex:none;border-radius:18px;display:grid;place-items:center;font-size:1.9rem}
-.sheet h2{margin:0;font-size:1.4rem}
-.sheet .tag{font-size:.78rem;font-weight:700;color:var(--muted)}
-.sheet p{margin:6px 0 16px;color:#4a4860;line-height:1.55}
-.sheet .row{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap}
-.status{font-size:.82rem;font-weight:700}
-.status.live{color:#2e9d63}.status.dev{color:#c58a12}
-.btn{border-radius:14px;padding:11px 18px;font-weight:700;font-size:.92rem}
-.btn.p{background:var(--ink);color:#fff}
-.btn.s{background:#f3ece0;color:var(--ink)}
-.x{position:absolute;right:14px;top:14px;width:34px;height:34px;border-radius:50%;background:#f3ece0;font-size:1rem;color:var(--ink)}
-
-/* list / profile overlay */
-.over{position:fixed;inset:0;z-index:30;background:rgba(43,42,58,.35);backdrop-filter:blur(4px);display:flex;justify-content:center;align-items:flex-start;padding:24px 14px;overflow:auto;opacity:0;visibility:hidden;transition:opacity .3s,visibility .3s}
-.over.on{opacity:1;visibility:visible}
-.panel{position:relative;background:var(--card);border-radius:28px;max-width:860px;width:100%;padding:32px;box-shadow:var(--shadow);margin:auto 0}
-.panel h2{font-size:1.8rem;margin:0 0 6px}
-.panel h3{margin:26px 0 12px;font-size:1.15rem}
-.panel .lead{color:var(--muted);margin:0 0 6px}
-.tl{border-left:3px dashed #eadfcd;margin-left:8px;padding-left:22px}
-.tl div{position:relative;margin-bottom:18px}
-.tl div::before{content:"";position:absolute;left:-31px;top:4px;width:15px;height:15px;border-radius:50%;background:var(--orange);border:3px solid var(--card)}
-.tl b{font-family:Fredoka;font-weight:600;display:block}
-.tl small{color:var(--orange);font-weight:700}
-.tl p{margin:2px 0 0;color:#4a4860;font-size:.95rem}
-.chips{display:flex;flex-wrap:wrap;gap:7px}
-.chip{background:#f3ece0;border-radius:99px;padding:6px 11px;font-size:.84rem;font-weight:600}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:12px}
-.tile{background:#fff;border:2px solid var(--line);border-radius:20px;padding:16px;text-align:left;color:var(--ink);transition:transform .15s,border-color .15s}
-.tile:hover{transform:translateY(-3px);border-color:#e3d3bb}
-.tile .e{font-size:1.5rem;height:34px;line-height:34px}
-.tile b{display:block;font-family:Fredoka;font-weight:600;margin:6px 0 4px}
-.tile span{font-size:.86rem;color:var(--muted)}
-.contactbox{background:linear-gradient(135deg,#fff1e6,#ffe7f0);border-radius:20px;padding:20px;display:flex;gap:12px;flex-wrap:wrap;align-items:center;justify-content:space-between}
-.toast{position:fixed;left:50%;top:84px;transform:translate(-50%,-30px);z-index:40;background:var(--ink);color:#fff;padding:12px 18px;border-radius:16px;font-weight:700;opacity:0;transition:all .4s;pointer-events:none;text-align:center}
-.toast.on{opacity:1;transform:translate(-50%,0)}
-.loading{position:fixed;inset:0;display:grid;place-items:center;z-index:1;font-family:Fredoka;color:var(--muted)}
-</style>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Victor [EFTERNAMN] – Produktionsplanering, VDC och egna digitala verktyg</title>
+<meta name="description" content="Produktionsplanerare och VDC i byggbranschen sedan 2014. Egna digitala verktyg, byggda med AI som utvecklingsstöd, som kopplar tidplanen till modellen och byggplatsen.">
+<link rel="canonical" href="https://vfalk-ncc.github.io/Portfolio/">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="sv_SE">
+<meta property="og:site_name" content="Victor [EFTERNAMN]">
+<meta property="og:url" content="https://vfalk-ncc.github.io/Portfolio/">
+<meta property="og:title" content="Victor [EFTERNAMN] – Produktionsplanering, VDC och egna digitala verktyg">
+<meta property="og:description" content="Tidplanen styr modellen. Egna verktyg, byggda med AI som utvecklingsstöd, som tar bort handgrepp i byggproduktionen.">
+<meta property="og:image" content="https://vfalk-ncc.github.io/Portfolio/img/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Linjeritning av en industrihall i statusfärger, vecka 18">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Victor [EFTERNAMN] – Produktionsplanering, VDC och egna digitala verktyg">
+<meta name="twitter:description" content="Tidplanen styr modellen. Egna verktyg, byggda med AI som utvecklingsstöd, som tar bort handgrepp i byggproduktionen.">
+<meta name="twitter:image" content="https://vfalk-ncc.github.io/Portfolio/img/og.png">
+<meta name="theme-color" content="#F5F3EE">
+<link rel="icon" href="img/favicon.svg" type="image/svg+xml">
+<link rel="preload" href="fonts/ibm-plex-sans-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="fonts/ibm-plex-sans-latin-600-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="css/style.css">
+<script>(function(d){d.classList.add('js');if(!window.matchMedia('(prefers-reduced-motion: reduce)').matches){d.classList.add('intro');setTimeout(function(){d.classList.remove('intro');},3000);}})(document.documentElement);</script>
+<script src="js/main.js" defer></script>
 </head>
 <body>
-<div class="loading" id="loading">Bygger planeten…</div>
-<canvas id="c"></canvas>
+<a class="skip" href="#innehall">Hoppa till innehåll</a>
 
-<!-- HUD -->
-<div class="hud" id="hud">
-  <div class="badge">
-    <div class="hat">👷</div>
-    <div><div class="name">Victor</div><div class="role">Lead Planner · VDC · Digitalisering</div></div>
+<header class="top">
+  <div class="wrap top-in">
+    <a class="brand" href="#top">
+      <svg class="brand-mark" viewBox="0 0 64 64" aria-hidden="true" focusable="false"><rect x="7" y="7" width="50" height="50" fill="none" stroke="currentColor" stroke-width="4"/><path d="M19 18 L32 47 L45 18" fill="none" stroke="currentColor" stroke-width="6"/><path d="M2 2 H16 M2 2 V16" stroke="#E8551E" stroke-width="5"/></svg>
+      <span class="brand-t">Victor <span class="brand-ln"><span class="ph">[EFTERNAMN]</span></span></span>
+    </a>
+    <nav aria-label="Huvudmeny">
+      <ul class="nav">
+        <li><a href="#verktyg">Verktyg</a></li>
+        <li><a href="#arbetssatt">Arbetssätt</a></li>
+        <li><a href="#erfarenhet">Erfarenhet</a></li>
+        <li><a href="#kontakt">Kontakt</a></li>
+      </ul>
+    </nav>
   </div>
-  <div class="right">
-    <button class="pill" data-open="profil">Om mig</button>
-    <button class="pill" data-open="lista">Alla verktyg</button>
-    <button class="pill" data-open="kontakt">Kontakt</button>
-  </div>
-</div>
-<div class="progress" id="progress"><div class="badge">🏗️ <span id="pc">0/0</span> stationer <div class="bar"><i id="pb"></i></div></div></div>
-<div class="hint" id="hint">WASD / pilar för att gå · klicka på planeten eller en station</div>
-<div class="prompt" id="prompt"></div>
+</header>
 
-<!-- Intro -->
-<div class="intro" id="intro">
-  <div class="card">
-    <span class="kicker">Portfolio · Verktygsnav</span>
-    <h1>Victor</h1>
-    <p>En liten planet. Ett stort bygge.<br>Någon måste planera det.</p>
-    <button class="go" id="go">Utforska planeten</button>
-    <button class="alt" data-open="lista">Snabbvy för den som har bråttom →</button>
-    <div class="keys">Gå med WASD eller piltangenter – eller klicka/tryck där du vill gå.</div>
-  </div>
-</div>
+<main id="innehall" tabindex="-1">
 
-<!-- Station sheet -->
-<div class="sheet" id="sheet">
-  <button class="x" id="sx" aria-label="Stäng">✕</button>
-  <div class="top"><div class="emo" id="se"></div><div><div class="tag" id="st"></div><h2 id="sn"></h2></div></div>
-  <p id="sd"></p>
-  <div class="row"><span class="status" id="ss"></span><div id="sb"></div></div>
-</div>
-
-<!-- Overlay -->
-<div class="over" id="over"><div class="panel" id="panel"></div></div>
-<div class="toast" id="toast"></div>
-
-<script>
-/* ======== INNEHÅLL – redigera här ======== */
-const PROFILE = {
-  name: "Victor",
-  email: "EPOST@EXEMPEL.SE",
-  linkedin: "https://www.linkedin.com/",
-};
-// url: länk till demo (tom = "demo kommer"). col: takfärg på stationen.
-const TOOLS = [
-  {e:"📋", n:"Production Cockpit", t:"Planering", col:"#5b8cff", s:"live", url:"",
-   d:"Produktionstavla med dags- och veckovy, heatmap, interaktiv Gantt med beroenden och automatisk kaskad, plus AI-förslag på aktivitetsföljd."},
-  {e:"🔎", n:"Planeringskoll 4D", t:"Planering", col:"#5b8cff", s:"live", url:"",
-   d:"Ladda upp tidplansexporten från 4D och få automatiska rimlighetskontroller: orimliga varaktigheter, valbart datumintervall och flaggor att agera på."},
-  {e:"↔️", n:"Före/Efter", t:"Visualisering", col:"#ff7aa8", s:"live", url:"",
-   d:"Dra-reglage som jämför framdrift mellan två bilder, med flikar och export till en läs-vy för presentation. Mycket uppskattad ute i projektet."},
-  {e:"📐", n:"Mängdavtagning 4D", t:"Mängder", col:"#5b8cff", s:"dev", url:"",
-   d:"Summerar volymer ur 4D-vyer och matchar grundskruvsgrupper från ritningstabeller mot rätt fundament."},
-  {e:"🧩", n:"Trimble Connect-tillägg", t:"BIM", col:"#5cc28a", s:"live", url:"",
-   d:"En svit tillägg via Workspace API: mätverktyg med volymberäkning, kommentarer, egenskapsetiketter och länkvisare direkt i modellen."},
-  {e:"🗺️", n:"PDF-overlay i modell", t:"BIM", col:"#5cc28a", s:"live", url:"",
-   d:"Lägg en ritning i 3D-modellen med 2–3 punkters kalibrering och exportera den som IFC."},
-  {e:"📍", n:"Geotaggade platsfoton", t:"BIM", col:"#5cc28a", s:"live", url:"",
-   d:"Placerar platsfoton i modellen utifrån EXIF-position, omräknat till projektets koordinatsystem."},
-  {e:"🧠", n:"Platsminnet", t:"BIM", col:"#5cc28a", s:"dev", url:"",
-   d:"Smart att-göra-lista där uppgifter kopplas till objekt, ritningar och foton i modellen."},
-  {e:"📚", n:"BinderBuilder", t:"Ritningar", col:"#ffc94a", s:"live", url:"",
-   d:"Bygger PDF-pärmar per område automatiskt ur ritningsleveranser, med senaste revision och klickbara länkar."},
-  {e:"🔄", n:"SharePoint-spegel", t:"Dokument", col:"#ffc94a", s:"dev", url:"",
-   d:"Speglar ett SharePoint-bibliotek till lokal disk med ett klick – bara nya och ändrade filer, utan adminrättigheter."},
-  {e:"☁️", n:"Punktmolnsviewer", t:"Punktmoln", col:"#ff7aa8", s:"live", url:"",
-   d:"Webbviewer för stora LAZ-punktmoln (1,4 GB+) med spelinspirerad navigering, koordinatavläsning och IFC i samma vy."},
-  {e:"🎙️", n:"Mötesprotokoll", t:"Möten", col:"#ffc94a", s:"dev", url:"",
-   d:"Spelar in möten, transkriberar lokalt utan AI-tjänster och tar fram protokoll med namngivna talare."},
-];
-const SPECIAL = [
-  {e:"🏠", n:"Om mig", t:"Station", col:"#ff8a3d", special:"profil",
-   d:"Tolv år från projektering till produktion. Jag har gjort arbetet själv – nu leder jag det, sprider kunskapen och styr helheten."},
-  {e:"📮", n:"Brevlådan", t:"Kontakt", col:"#ff8a3d", special:"kontakt",
-   d:"Vill du se verktygen live eller prata planering, VDC och digitalisering? Släng iväg ett brev."},
-];
-
-const PROFIL_HTML = `
-  <h2>Om mig</h2>
-  <p class="lead">Lead Planner och VDC-ansvarig i storskalig industribyggnation. Jag gör komplex byggproduktion planerbar och synlig – och bygger verktygen som saknas när standardsystemen inte räcker.</p>
-  <h3>Erfarenhet</h3>
-  <div class="tl">
-    <div><small>2025 – nu · NCC</small><b>Lead Planner / VDC – Nytt Sovringsverk, LKAB Gällivare</b>
-      <p>Helhetsansvar för planering i produktion i ett miljardprojekt: veckoplanering, produktionstidplaner, byggordning och prefab-workshops, APD- och logistikplaner, lotskartor, 4D-simulering, lyftplanering och lägesbilder för byggmöten. Leder produktionsplaneringsmötet.</p></div>
-    <div><small>2020 – 2025 · Sweco</small><b>Teknikansvarig & ledande projektör, bro och anläggning</b>
-      <p>Ledde team om 5–6 personer från förfrågan till granskade bygghandlingar och byggplatsuppföljning mot Trafikverket, med timbudget per uppdrag. Samordnade 15–20 byggnadsverk mot fast tidplan. Programansvarig för Tekla Structures inom anläggningskonstruktion i Sverige.</p></div>
-    <div><small>2014 – 2020 · Ramboll</small><b>Byggnadskonstruktör & uppdragsledare</b>
-      <p>Ledande projektör som fördelade och styrde arbete lokalt och mot team i Indien, och avslutningsvis uppdragsledare med direkt kundkontakt.</p></div>
-    <div><small>2011 – 2014 · Högskolan i Gävle</small><b>Byggnadsingenjör, arkitektur och miljö</b><p>Genomförda studier.</p></div>
-  </div>
-  <h3>Verktyg och metoder</h3>
-  <div class="chips">${["Synchro 4D PRO","Primavera P6","Powerproject","MS Project","Tekla Structures","Trimble Connect","Revit","Navisworks","Bluebeam","Rhino/Grasshopper","CloudCompare","QGIS","Python","JavaScript",".NET/WPF","Claude API"].map(c=>`<span class="chip">${c}</span>`).join("")}</div>`;
-
-const KONTAKT_HTML = () => `
-  <h2>Kontakt</h2>
-  <p class="lead">Intresserad av planering, VDC eller digitalisering av byggproduktion? Jag visar gärna verktygen live.</p>
-  <div class="contactbox" style="margin-top:18px">
-    <b class="f" style="font-size:1.1rem">📮 Hör av dig</b>
-    <div style="display:flex;gap:8px;flex-wrap:wrap">
-      <a class="btn p" style="text-decoration:none" href="mailto:${PROFILE.email}">Skicka e-post</a>
-      <a class="btn s" style="text-decoration:none" href="${PROFILE.linkedin}" target="_blank" rel="noopener">LinkedIn</a>
+<section class="hero" id="top" aria-labelledby="h1">
+  <div class="wrap hero-in">
+    <div class="hero-txt">
+      <p class="over">Planering · VDC · Egna verktyg</p>
+      <h1 id="h1" class="name">Victor <span class="ph">[EFTERNAMN]</span></h1>
+      <p class="claim">Tidplanen styr modellen. Verktygen bygger jag själv.</p>
+      <p class="lead">Produktionsplanerare och VDC i byggbranschen sedan 2014. Med AI som utvecklingsstöd bygger jag egna verktyg som kopplar tidplanen till modellen och byggplatsen och tar bort handgrepp som annars äter timmar varje vecka.</p>
+      <p class="cta">
+        <a class="btn btn-main" href="#verktyg">Se verktygen</a>
+        <a class="btn" href="#kontakt">Kontakt</a>
+      </p>
     </div>
-  </div>`;
 
-/* ======== UI ======== */
-const $ = id => document.getElementById(id);
-const over = $("over"), panel = $("panel");
-let uiOpen = false;
-function openOverlay(kind){
-  let html = "";
-  if(kind==="profil") html = PROFIL_HTML;
-  else if(kind==="kontakt") html = KONTAKT_HTML();
-  else html = `<h2>Alla verktyg</h2><p class="lead">Egna initiativ, byggda för att lösa verkliga problem i produktion. Klicka för att läsa mer.</p>
-    <div class="grid" style="margin-top:16px">${TOOLS.map((t,i)=>`<button class="tile" data-tool="${i}"><div class="e">${t.e}</div><b>${t.n}</b><span>${t.d}</span></button>`).join("")}</div>
-    <h3>Om mig</h3>${PROFIL_HTML.replace("<h2>Om mig</h2>","")}${KONTAKT_HTML().replace("<h2>Kontakt</h2>","<h3>Kontakt</h3>")}`;
-  panel.innerHTML = `<button class="x" data-close aria-label="Stäng">✕</button>` + html;
-  over.classList.add("on"); uiOpen = true; closeSheet();
-}
-function closeOverlay(){ over.classList.remove("on"); uiOpen = false; }
-document.addEventListener("click", e=>{
-  const o = e.target.closest("[data-open]"); if(o){ openOverlay(o.dataset.open); return; }
-  if(e.target.closest("[data-close]") || e.target===over){ closeOverlay(); return; }
-  const t = e.target.closest("[data-tool]"); if(t){ closeOverlay(); showSheet(TOOLS[+t.dataset.tool]); }
-});
+    <figure class="plan" id="plan" style="--w:18" data-now="18">
+      <div class="plan-head" aria-hidden="true">
+        <span>FIG. 1</span><span>Generisk industrihall</span><span class="ph-3">Tidplan styr modell</span>
+      </div>
+      <div class="plan-draw">
+        <svg class="bldg" id="bldg" viewBox="-200 -75 484 325" role="img" aria-labelledby="bldg-t bldg-d">
+<title id="bldg-t">Axonometrisk ritning av en generisk industrihall</title>
+<desc id="bldg-d">Hallens delar får statusfärg efter tidplanens vecka: planerad, pågår, klar eller försenad. I vecka 18 ligger väggarna efter plan.</desc>
+<g class="grid" aria-hidden="true"><line class="ax" x1="23.4" y1="-13.5" x2="-145" y2="83.7"/><line class="ax" x1="79.5" y1="18.9" x2="-88.9" y2="116.1"/><line class="ax" x1="135.6" y1="51.3" x2="-32.7" y2="148.5"/><line class="ax" x1="191.7" y1="83.7" x2="23.4" y2="180.9"/><line class="ax" x1="247.9" y1="116.1" x2="79.5" y2="213.3"/><line class="ax" x1="-23.4" y1="-13.5" x2="257.2" y2="148.5"/><line class="ax" x1="-79.5" y1="18.9" x2="201.1" y2="180.9"/><line class="ax" x1="-135.6" y1="51.3" x2="145" y2="213.3"/></g>
+<g class="parts"><polygon class="el d k-slab" data-a="1" data-pw="1" data-w="1" points="0,0 56.1,32.4 -56.1,97.2 -112.2,64.8"/>
+<polygon class="el d k-slab" data-a="1" data-pw="2" data-w="2" points="56.1,32.4 112.2,64.8 0,129.6 -56.1,97.2"/>
+<polygon class="el d k-slab" data-a="1" data-pw="3" data-w="3" points="112.2,64.8 168.4,97.2 56.1,162 0,129.6"/>
+<polygon class="el d k-slab" data-a="1" data-pw="4" data-w="4" points="168.4,97.2 224.5,129.6 112.2,194.4 56.1,162"/>
+<polygon class="el o k-wall" data-a="6" data-pw="13" data-w="15" points="168.4,97.2 224.5,129.6 224.5,64.8 168.4,32.4"/>
+<polygon class="el o k-wall" data-a="6" data-pw="14" data-w="16" points="112.2,64.8 168.4,97.2 168.4,32.4 112.2,0"/>
+<polygon class="el o k-wall" data-a="6" data-pw="15" data-w="17" points="56.1,32.4 112.2,64.8 112.2,0 56.1,-32.4"/>
+<polygon class="el l k-wall" data-a="6" data-pw="16" data-w="19" points="0,0 56.1,32.4 56.1,-32.4 0,-64.8"/>
+<polygon class="el l k-wall" data-a="6" data-pw="17" data-w="20" points="0,0 -56.1,32.4 -56.1,-48.6 0,-64.8"/>
+<polygon class="el l k-wall" data-a="6" data-pw="18" data-w="21" points="-56.1,32.4 -112.2,64.8 -112.2,0 -56.1,-48.6"/>
+<g class="el p k-door" data-a="7" data-pw="20" data-w="20"><polygon points="70.1,40.5 98.2,56.7 98.2,21.6 70.1,5.4"/><line class="k-in" x1="70.1" y1="31.9" x2="98.2" y2="48.1"/><line class="k-in" x1="70.1" y1="23.2" x2="98.2" y2="39.4"/><line class="k-in" x1="70.1" y1="14.6" x2="98.2" y2="30.8"/></g>
+<g class="el p k-door" data-a="7" data-pw="21" data-w="21"><polygon points="182.4,105.3 210.4,121.5 210.4,86.4 182.4,70.2"/><line class="k-in" x1="182.4" y1="96.7" x2="210.4" y2="112.9"/><line class="k-in" x1="182.4" y1="88" x2="210.4" y2="104.2"/><line class="k-in" x1="182.4" y1="79.4" x2="210.4" y2="95.6"/></g>
+<line class="el d k-col" data-a="2" data-pw="4" data-w="4" x1="0" y1="0" x2="0" y2="-64.8"/>
+<line class="el d k-col" data-a="2" data-pw="4" data-w="4" x1="-56.1" y1="32.4" x2="-56.1" y2="-48.6"/>
+<line class="el d k-col" data-a="2" data-pw="4" data-w="4" x1="-112.2" y1="64.8" x2="-112.2" y2="0"/>
+<line class="el d k-col" data-a="2" data-pw="5" data-w="5" x1="56.1" y1="32.4" x2="56.1" y2="-32.4"/>
+<line class="el d k-col" data-a="2" data-pw="5" data-w="5" x1="0" y1="64.8" x2="0" y2="-16.2"/>
+<line class="el d k-col" data-a="2" data-pw="5" data-w="5" x1="-56.1" y1="97.2" x2="-56.1" y2="32.4"/>
+<line class="el d k-col" data-a="2" data-pw="6" data-w="6" x1="112.2" y1="64.8" x2="112.2" y2="0"/>
+<line class="el d k-col" data-a="2" data-pw="6" data-w="6" x1="56.1" y1="97.2" x2="56.1" y2="16.2"/>
+<line class="el d k-col" data-a="2" data-pw="6" data-w="6" x1="0" y1="129.6" x2="0" y2="64.8"/>
+<line class="el d k-col" data-a="2" data-pw="7" data-w="7" x1="168.4" y1="97.2" x2="168.4" y2="32.4"/>
+<line class="el d k-col" data-a="2" data-pw="7" data-w="7" x1="112.2" y1="129.6" x2="112.2" y2="48.6"/>
+<line class="el d k-col" data-a="2" data-pw="7" data-w="7" x1="56.1" y1="162" x2="56.1" y2="97.2"/>
+<line class="el d k-col" data-a="2" data-pw="8" data-w="8" x1="224.5" y1="129.6" x2="224.5" y2="64.8"/>
+<line class="el d k-col" data-a="2" data-pw="8" data-w="8" x1="168.4" y1="162" x2="168.4" y2="81"/>
+<line class="el d k-col" data-a="2" data-pw="8" data-w="8" x1="112.2" y1="194.4" x2="112.2" y2="129.6"/>
+<line class="el d k-beam" data-a="3" data-pw="6" data-w="6" x1="0" y1="-64.8" x2="56.1" y2="-32.4"/>
+<line class="el d k-beam" data-a="3" data-pw="6" data-w="6" x1="-112.2" y1="0" x2="-56.1" y2="32.4"/>
+<line class="el d k-beam" data-a="3" data-pw="6" data-w="6" x1="-56.1" y1="-48.6" x2="0" y2="-16.2"/>
+<line class="el d k-beam" data-a="3" data-pw="7" data-w="7" x1="56.1" y1="-32.4" x2="112.2" y2="0"/>
+<line class="el d k-beam" data-a="3" data-pw="7" data-w="7" x1="-56.1" y1="32.4" x2="0" y2="64.8"/>
+<line class="el d k-beam" data-a="3" data-pw="8" data-w="8" x1="0" y1="-16.2" x2="56.1" y2="16.2"/>
+<line class="el d k-beam" data-a="3" data-pw="8" data-w="8" x1="112.2" y1="0" x2="168.4" y2="32.4"/>
+<line class="el d k-beam" data-a="3" data-pw="8" data-w="8" x1="0" y1="64.8" x2="56.1" y2="97.2"/>
+<line class="el d k-beam" data-a="3" data-pw="9" data-w="9" x1="56.1" y1="16.2" x2="112.2" y2="48.6"/>
+<line class="el d k-beam" data-a="3" data-pw="9" data-w="9" x1="168.4" y1="32.4" x2="224.5" y2="64.8"/>
+<line class="el d k-beam" data-a="3" data-pw="10" data-w="10" x1="56.1" y1="97.2" x2="112.2" y2="129.6"/>
+<line class="el d k-beam" data-a="3" data-pw="10" data-w="10" x1="112.2" y1="48.6" x2="168.4" y2="81"/>
+<polyline class="el d k-raft" data-a="4" data-pw="9" data-w="9" points="0,-64.8 -56.1,-48.6 -112.2,0"/>
+<polyline class="el d k-raft" data-a="4" data-pw="10" data-w="10" points="56.1,-32.4 0,-16.2 -56.1,32.4"/>
+<polyline class="el d k-raft" data-a="4" data-pw="11" data-w="11" points="112.2,0 56.1,16.2 0,64.8"/>
+<polyline class="el d k-raft" data-a="4" data-pw="12" data-w="12" points="168.4,32.4 112.2,48.6 56.1,97.2"/>
+<polyline class="el d k-raft" data-a="4" data-pw="13" data-w="13" points="224.5,64.8 168.4,81 112.2,129.6"/>
+<polygon class="el d k-roof" data-a="5" data-pw="12" data-w="12" points="0,-64.8 56.1,-32.4 0,-16.2 -56.1,-48.6"/>
+<polygon class="el d k-roof" data-a="5" data-pw="12" data-w="12" points="-56.1,-48.6 0,-16.2 -56.1,32.4 -112.2,0"/>
+<polygon class="el d k-roof" data-a="5" data-pw="13" data-w="13" points="56.1,-32.4 112.2,0 56.1,16.2 0,-16.2"/>
+<polygon class="el d k-roof" data-a="5" data-pw="13" data-w="13" points="0,-16.2 56.1,16.2 0,64.8 -56.1,32.4"/>
+<polygon class="el d k-roof" data-a="5" data-pw="14" data-w="14" points="112.2,0 168.4,32.4 112.2,48.6 56.1,16.2"/>
+<polygon class="el d k-roof" data-a="5" data-pw="15" data-w="15" points="56.1,16.2 112.2,48.6 56.1,97.2 0,64.8"/>
+<polygon class="el d k-roof" data-a="5" data-pw="15" data-w="15" points="168.4,32.4 224.5,64.8 168.4,81 112.2,48.6"/>
+<polygon class="el d k-roof" data-a="5" data-pw="16" data-w="16" points="112.2,48.6 168.4,81 112.2,129.6 56.1,97.2"/>
+<g class="el p k-unit" data-a="7" data-pw="22" data-w="22"><polygon points="-39.8,-2.4 -16.4,11.1 -16.4,-0.8 -39.8,-14.3"/><polygon points="0,1.6 -16.4,11.1 -16.4,-0.8 0,-10.3"/><polygon points="-23.4,-23.8 0,-10.3 -16.4,-0.8 -39.8,-14.3"/></g>
+<g class="el p k-unit" data-a="7" data-pw="23" data-w="23"><polygon points="63.1,57 86.5,70.5 86.5,58.6 63.1,45.1"/><polygon points="102.9,61 86.5,70.5 86.5,58.6 102.9,49.1"/><polygon points="79.5,35.6 102.9,49.1 86.5,58.6 63.1,45.1"/></g></g>
+<g aria-hidden="true"><circle class="bub" cx="-159" cy="91.8" r="7.5"/><text class="bt" x="-159" y="95">1</text><circle class="bub" cx="-102.9" cy="124.2" r="7.5"/><text class="bt" x="-102.9" y="127.4">2</text><circle class="bub" cx="-46.8" cy="156.6" r="7.5"/><text class="bt" x="-46.8" y="159.8">3</text><circle class="bub" cx="9.4" cy="189" r="7.5"/><text class="bt" x="9.4" y="192.2">4</text><circle class="bub" cx="65.5" cy="221.4" r="7.5"/><text class="bt" x="65.5" y="224.6">5</text><circle class="bub" cx="271.2" cy="156.6" r="7.5"/><text class="bt" x="271.2" y="159.8">A</text><circle class="bub" cx="215.1" cy="189" r="7.5"/><text class="bt" x="215.1" y="192.2">B</text><circle class="bub" cx="159" cy="221.4" r="7.5"/><text class="bt" x="159" y="224.6">C</text><g class="dim"><line x1="-187.1" y1="108" x2="37.4" y2="237.6"/><line x1="-190.1" y1="111" x2="-184.1" y2="105"/><line x1="34.4" y1="240.6" x2="40.4" y2="234.6"/></g></g>
+</svg>
+      </div>
+      <div class="plan-status" aria-hidden="true">
+        <p class="wk"><span id="wk">V 18</span><span class="wk-tag" id="wk-tag">· NU</span></p>
+        <ul class="legend" id="legend">
+          <li class="lg-d"><i></i>Klar <b data-c="d">5</b></li>
+          <li class="lg-o"><i></i>Pågår <b data-c="o">0</b></li>
+          <li class="lg-l"><i></i>Försenad <b data-c="l">1</b></li>
+          <li class="lg-p"><i></i>Planerad <b data-c="p">1</b></li>
+        </ul>
+      </div>
+      <div class="gantt" aria-hidden="true">
+        <div class="g-head"><span class="g-lab"></span><span class="g-scale"><span style="--t:1">V01</span><span class="t-minor" style="--t:4">V04</span><span style="--t:8">V08</span><span class="t-minor" style="--t:12">V12</span><span style="--t:16">V16</span><span class="t-minor" style="--t:20">V20</span><span style="--t:24">V24</span></span></div>
+        <ol class="g-rows" id="g-rows">
+<li class="g-row is-d" data-s="1" data-e="4" data-as="1" data-ae="4" style="--s:1;--e:4;--as:1;--ae:4;--dw:4"><span class="g-lab">Grundläggning</span><span class="g-track"><span class="g-plan"></span><span class="g-prog"></span></span></li>
+<li class="g-row is-d" data-s="4" data-e="8" data-as="4" data-ae="8" style="--s:4;--e:8;--as:4;--ae:8;--dw:5"><span class="g-lab">Pelare</span><span class="g-track"><span class="g-plan"></span><span class="g-prog"></span></span></li>
+<li class="g-row is-d" data-s="6" data-e="10" data-as="6" data-ae="10" style="--s:6;--e:10;--as:6;--ae:10;--dw:5"><span class="g-lab">Balkar</span><span class="g-track"><span class="g-plan"></span><span class="g-prog"></span></span></li>
+<li class="g-row is-d" data-s="9" data-e="13" data-as="9" data-ae="13" style="--s:9;--e:13;--as:9;--ae:13;--dw:5"><span class="g-lab">Takstolar</span><span class="g-track"><span class="g-plan"></span><span class="g-prog"></span></span></li>
+<li class="g-row is-d" data-s="12" data-e="16" data-as="12" data-ae="16" style="--s:12;--e:16;--as:12;--ae:16;--dw:5"><span class="g-lab">Takplåt</span><span class="g-track"><span class="g-plan"></span><span class="g-prog"></span></span></li>
+<li class="g-row is-l" data-s="13" data-e="18" data-as="15" data-ae="22" style="--s:13;--e:18;--as:15;--ae:22;--dw:4"><span class="g-lab">Väggar</span><span class="g-track"><span class="g-plan"></span><span class="g-prog"></span><span class="g-late"></span></span></li>
+<li class="g-row is-p" data-s="20" data-e="23" data-as="20" data-ae="23" style="--s:20;--e:23;--as:20;--ae:23;--dw:0"><span class="g-lab">Portar och aggregat</span><span class="g-track"><span class="g-plan"></span><span class="g-prog"></span></span></li>
+        </ol>
+        <span class="g-now"></span>
+      </div>
+      <div class="g-ctrl">
+        <label class="g-lab" for="wk-range">Vecka</label>
+        <span class="g-range-wrap">
+          <input type="range" id="wk-range" min="1" max="24" step="1" value="18" aria-valuetext="Vecka 18 av 24, nuläge: 5 klara, 1 försenad, 1 planerad">
+        </span>
+      </div>
+      <figcaption>Dra i reglaget. Varje vecka i tidplanen ger varje del i modellen en statusfärg, så att avvikelser syns innan byggmötet. Samma princip som verktyget Tidplan i modellen.</figcaption>
+    </figure>
 
-const sheet = $("sheet");
-let sheetItem = null;
-function showSheet(item){
-  sheetItem = item;
-  $("se").textContent = item.e; $("se").style.background = item.col + "33";
-  $("st").textContent = item.t; $("sn").textContent = item.n; $("sd").textContent = item.d;
-  const ss = $("ss"), sb = $("sb");
-  if(item.special){
-    ss.textContent = ""; ss.className = "status";
-    sb.innerHTML = `<button class="btn p" data-open="${item.special}">${item.special==="profil"?"Läs CV":"Kontakta mig"}</button>`;
-  } else {
-    ss.className = "status " + item.s;
-    ss.textContent = item.url ? "● Demo finns" : (item.s==="live" ? "● I drift · demo kommer" : "● Under utveckling");
-    sb.innerHTML = item.url ? `<a class="btn p" style="text-decoration:none" href="${item.url}" target="_blank" rel="noopener">Öppna demo →</a>` : "";
-    markVisited(item);
-  }
-  sheet.classList.add("on");
-}
-function closeSheet(){ sheet.classList.remove("on"); sheetItem = null; }
-$("sx").onclick = closeSheet;
+    <dl class="facts">
+      <div><dt>I branschen</dt><dd>Sedan 2014</dd></div>
+      <div><dt>Byggda med</dt><dd>AI som utvecklingsstöd, främst Claude</dd></div>
+      <div><dt>Tidplan i modellen</dt><dd>Används varje vecka</dd></div>
+    </dl>
+  </div>
+</section>
 
-const visited = new Set();
-function updateProgress(){
-  $("pc").textContent = `${visited.size}/${TOOLS.length}`;
-  $("pb").style.width = (visited.size/TOOLS.length*100) + "%";
-}
-function markVisited(item){
-  if(visited.has(item.n)) return;
-  visited.add(item.n); updateProgress();
-  if(visited.size===TOOLS.length) toast("Alla stationer besökta! 🎉 Snyggt jobbat – hör av dig via brevlådan.");
-}
-function toast(msg){ const t=$("toast"); t.textContent=msg; t.classList.add("on"); setTimeout(()=>t.classList.remove("on"),4200); }
-updateProgress();
+<section class="sec sec-first" id="skillnad" aria-labelledby="h-skillnad">
+  <div class="wrap">
+    <p class="over"><span class="num">01</span>Det som skiljer</p>
+    <h2 id="h-skillnad">Planering som syns, verktyg som körs</h2>
+    <ol class="three">
+      <li class="reveal">
+        <span class="chip">Modell</span>
+        <h3>Tidplanen syns i modellen</h3>
+        <p>Tidplaner från Powerproject och Primavera P6 kopplas till 3D-modellen. Varje vecka får varje del en statusfärg, och lägesbilden går ut till byggmötet och till Trimble Connect.</p>
+      </li>
+      <li class="reveal">
+        <span class="chip">Automatik</span>
+        <h3>Handgrepp blir verktyg</h3>
+        <p>Ritningspärmar, filspegling och kontroller av tidplanen sker automatiskt. Där andra gör samma moment varje vecka skriver jag ett verktyg.</p>
+      </li>
+      <li class="reveal">
+        <span class="chip">Bredd</span>
+        <h3>Ritningen och bygget, från båda håll</h3>
+        <p>Från projektering och modellering till planering i produktionen. Jag vet hur ritningar och modeller blir till, och vad bygget behöver av dem.</p>
+      </li>
+    </ol>
+  </div>
+</section>
 
-function webglOK(){ try{ const c=document.createElement("canvas"); return !!(c.getContext("webgl2")||c.getContext("webgl")); }catch(e){ return false; } }
-window.__start = () => {};
-$("go").onclick = () => {
-  $("intro").classList.add("off");
-  ["hud","progress","hint"].forEach(id=>$(id).classList.add("on"));
-  window.__start();
-};
-if(!webglOK()){ $("loading").textContent=""; $("go").style.display="none"; openOverlay("lista"); }
-</script>
+<section class="sec" id="verktyg" aria-labelledby="h-verktyg">
+  <div class="wrap">
+    <p class="over"><span class="num">02</span>Verktyg</p>
+    <h2 id="h-verktyg">Verktyg jag har byggt</h2>
+    <p class="intro">Egna initiativ, byggda med AI som utvecklingsstöd, främst Claude. Vart och ett svarar på ett problem från planeringen eller bygget.</p>
 
-<script type="module">
-import * as THREE from "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js";
+    <div class="tools">
+      <article class="tool reveal" aria-labelledby="t-1">
+        <div class="tool-art draw"><svg viewBox="0 0 400 240" aria-hidden="true" focusable="false"><g><polygon class="ln-fill" points="92,76.4 254.1,170 173.1,216.8 10.9,123.2"/><g class="b-d"><polygon points="38,123.2 65,138.8 65,92 38,76.4"/><polygon points="119,107.6 65,138.8 65,92 119,60.8"/><polygon points="92,45.2 119,60.8 65,92 38,76.4"/></g><g class="b-d"><polygon points="65,138.8 92,154.4 92,107.6 65,92"/><polygon points="146,123.2 92,154.4 92,107.6 146,76.4"/><polygon points="119,60.8 146,76.4 92,107.6 65,92"/></g><g class="b-o"><polygon points="92,154.4 119,170 119,123.2 92,107.6"/><polygon points="173.1,138.8 119,170 119,123.2 173.1,92"/><polygon points="146,76.4 173.1,92 119,123.2 92,107.6"/></g><g class="b-p"><polygon points="119,170 146,185.6 146,138.8 119,123.2"/><polygon points="200.1,154.4 146,185.6 146,138.8 200.1,107.6"/><polygon points="173.1,92 200.1,107.6 146,138.8 119,123.2"/></g><g class="b-p"><polygon points="146,185.6 173.1,201.2 173.1,154.4 146,138.8"/><polygon points="227.1,170 173.1,201.2 173.1,154.4 227.1,123.2"/><polygon points="200.1,107.6 227.1,123.2 173.1,154.4 146,138.8"/></g></g><path class="link ln" pathLength="1" d="M232 105 C 196 105, 162.5 99.8, 132.5 99.8"/><circle class="node" cx="132.5" cy="99.8" r="3.5"/><path class="ln" pathLength="1" d="M236 42 H372"/><rect class="g-d" x="236" y="56" width="38.1" height="10"/><rect class="g-d" x="260.5" y="78" width="38.1" height="10"/><rect class="g-o" x="285" y="100" width="46.2" height="10"/><rect class="g-p" x="317.6" y="122" width="35.4" height="10"/><rect class="g-p" x="342.1" y="144" width="29.9" height="10"/><line class="now" x1="310.8" y1="34" x2="310.8" y2="166"/><text class="mono" x="315.8" y="36">V 14</text><text class="mono s" x="24" y="222">POWERPROJECT · P6 · MODELL</text></svg></div>
+        <div class="tool-body">
+          <p class="tool-no">Verktyg 01 · SketchUp-tillägg</p>
+          <h3 id="t-1">Tidplan i modellen</h3>
+          <dl class="pl">
+            <dt>Problem</dt><dd>Tidplan och modell lever i olika program.</dd>
+            <dt>Lösning</dt><dd>Ett tillägg till SketchUp som läser tidplanen och färgar modellen vecka för vecka. Används varje vecka.</dd>
+          </dl>
+          <ul class="tags" aria-label="Funktioner">
+            <li>Powerproject</li><li>Primavera P6</li><li>Tidsreglage</li><li>Gantt och tavla</li><li>Montageordning</li><li>Skyltar i 3D</li><li>IFC till Trimble Connect</li><li>SWEREF 99</li>
+          </ul>
+        </div>
+      </article>
 
-const canvas = document.getElementById("c");
-const renderer = new THREE.WebGLRenderer({canvas, antialias:true, alpha:true});
-renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
-renderer.shadowMap.enabled = true;
-renderer.shadowMap.type = THREE.PCFSoftShadowMap;
-renderer.outputColorSpace = THREE.SRGBColorSpace;
+      <article class="tool reveal" aria-labelledby="t-2">
+        <div class="tool-art draw"><svg viewBox="0 0 400 240" aria-hidden="true" focusable="false"><polygon class="ln-fill" points="176,52 339.9,146.6 228.1,211.1 64.3,116.5"/><polygon class="sheet" points="176,64.9 280.3,125.1 198.3,172.4 94.1,112.2"/><line class="sheet-l" x1="172.3" y1="80" x2="231.9" y2="114.4"/><line class="sheet-l" x1="157.4" y1="88.6" x2="217" y2="123"/><line class="sheet-l" x1="142.5" y1="97.2" x2="202.1" y2="131.6"/><line class="sheet-l" x1="127.6" y1="105.8" x2="187.2" y2="140.1"/><polygon class="sheet-l" points="190.9,142.3 220.7,159.5 198.3,172.4 168.6,155.2"/><g class="calx"><circle cx="94.1" cy="112.2" r="5"/><line x1="85.1" y1="112.2" x2="103.1" y2="112.2"/><line x1="94.1" y1="103.2" x2="94.1" y2="121.2"/></g><g class="calx"><circle cx="198.3" cy="172.4" r="5"/><line x1="189.3" y1="172.4" x2="207.3" y2="172.4"/><line x1="198.3" y1="163.4" x2="198.3" y2="181.4"/></g><path class="qty ln" pathLength="1" d="M149.9 110.1 L213.2 142.3 L246.8 183.2 L190.9 181 L120.1 135.9 Z"/><rect class="vtx" x="147.4" y="107.6" width="5" height="5"/><rect class="vtx" x="210.7" y="139.8" width="5" height="5"/><rect class="vtx" x="244.3" y="180.7" width="5" height="5"/><rect class="vtx" x="188.4" y="178.5" width="5" height="5"/><rect class="vtx" x="117.6" y="133.4" width="5" height="5"/><g class="b-m"><polygon points="149.9,92.9 202.1,123 202.1,97.2 149.9,67.1"/><polygon points="231.9,105.8 202.1,123 202.1,97.2 231.9,80"/><polygon points="179.7,49.9 231.9,80 202.1,97.2 149.9,67.1"/></g><g class="b-m"><polygon points="228.1,133.7 265.4,155.2 265.4,140.1 228.1,118.7"/><polygon points="291.4,140.1 265.4,155.2 265.4,140.1 291.4,125.1"/><polygon points="254.2,103.6 291.4,125.1 265.4,140.1 228.1,118.7"/></g><path class="pin pin-o" d="M190.9 73.5 c-2 -6 -8 -10 -8 -16 a8 8 0 0 1 16 0 c0 6 -6 10 -8 16 z"/><circle class="pin-c" cx="190.9" cy="57.5" r="2.6"/><path class="pin pin-l" d="M259.8 121.9 c-2 -6 -8 -10 -8 -16 a8 8 0 0 1 16 0 c0 6 -6 10 -8 16 z"/><circle class="pin-c" cx="259.8" cy="105.9" r="2.6"/><path class="pin pin-d" d="M164.8 144.5 c-2 -6 -8 -10 -8 -16 a8 8 0 0 1 16 0 c0 6 -6 10 -8 16 z"/><circle class="pin-c" cx="164.8" cy="128.5" r="2.6"/><text class="mono s" x="24" y="228">SWEREF 99 · PDF · FOTO · MÄNGD</text></svg></div>
+        <div class="tool-body">
+          <p class="tool-no">Verktyg 02 · Workspace API</p>
+          <h3 id="t-2">Tillägg till Trimble Connect</h3>
+          <dl class="pl">
+            <dt>Problem</dt><dd>Modellvisaren saknar verktyg för det arbete som görs på bygget.</dd>
+            <dt>Lösning</dt><dd>Egna verktyg direkt i modellvisaren: mät, märk upp och koppla ritningar och foton till rätt plats i modellen.</dd>
+          </dl>
+          <ul class="tags" aria-label="Funktioner">
+            <li>Annoteringar</li><li>Mängd med polygon och TIN</li><li>PDF-överlägg</li><li>Geotaggade foton</li><li>Egenskapsetiketter</li><li>Platsminnet</li>
+          </ul>
+        </div>
+      </article>
 
-const scene = new THREE.Scene();
-scene.fog = new THREE.Fog(0xd8ecff, 22, 46);
-const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 200);
+      <article class="tool reveal" aria-labelledby="t-3">
+        <div class="tool-art ba-wrap">
+          <div class="ba" id="ba" style="--pos:50%">
+            <div class="ba-layer ba-after"><svg viewBox="0 0 640 360" aria-hidden="true" focusable="false"><line class="gnd" x1="20" y1="300" x2="620" y2="300"/><line class="hatch" x1="24" y1="302" x2="16" y2="310"/><line class="hatch" x1="38" y1="302" x2="30" y2="310"/><line class="hatch" x1="52" y1="302" x2="44" y2="310"/><line class="hatch" x1="66" y1="302" x2="58" y2="310"/><line class="hatch" x1="80" y1="302" x2="72" y2="310"/><line class="hatch" x1="94" y1="302" x2="86" y2="310"/><line class="hatch" x1="108" y1="302" x2="100" y2="310"/><line class="hatch" x1="122" y1="302" x2="114" y2="310"/><line class="hatch" x1="136" y1="302" x2="128" y2="310"/><line class="hatch" x1="150" y1="302" x2="142" y2="310"/><line class="hatch" x1="164" y1="302" x2="156" y2="310"/><line class="hatch" x1="178" y1="302" x2="170" y2="310"/><line class="hatch" x1="192" y1="302" x2="184" y2="310"/><line class="hatch" x1="206" y1="302" x2="198" y2="310"/><line class="hatch" x1="220" y1="302" x2="212" y2="310"/><line class="hatch" x1="234" y1="302" x2="226" y2="310"/><line class="hatch" x1="248" y1="302" x2="240" y2="310"/><line class="hatch" x1="262" y1="302" x2="254" y2="310"/><line class="hatch" x1="276" y1="302" x2="268" y2="310"/><line class="hatch" x1="290" y1="302" x2="282" y2="310"/><line class="hatch" x1="304" y1="302" x2="296" y2="310"/><line class="hatch" x1="318" y1="302" x2="310" y2="310"/><line class="hatch" x1="332" y1="302" x2="324" y2="310"/><line class="hatch" x1="346" y1="302" x2="338" y2="310"/><line class="hatch" x1="360" y1="302" x2="352" y2="310"/><line class="hatch" x1="374" y1="302" x2="366" y2="310"/><line class="hatch" x1="388" y1="302" x2="380" y2="310"/><line class="hatch" x1="402" y1="302" x2="394" y2="310"/><line class="hatch" x1="416" y1="302" x2="408" y2="310"/><line class="hatch" x1="430" y1="302" x2="422" y2="310"/><line class="hatch" x1="444" y1="302" x2="436" y2="310"/><line class="hatch" x1="458" y1="302" x2="450" y2="310"/><line class="hatch" x1="472" y1="302" x2="464" y2="310"/><line class="hatch" x1="486" y1="302" x2="478" y2="310"/><line class="hatch" x1="500" y1="302" x2="492" y2="310"/><line class="hatch" x1="514" y1="302" x2="506" y2="310"/><line class="hatch" x1="528" y1="302" x2="520" y2="310"/><line class="hatch" x1="542" y1="302" x2="534" y2="310"/><line class="hatch" x1="556" y1="302" x2="548" y2="310"/><line class="hatch" x1="570" y1="302" x2="562" y2="310"/><line class="hatch" x1="584" y1="302" x2="576" y2="310"/><line class="hatch" x1="598" y1="302" x2="590" y2="310"/><line class="hatch" x1="612" y1="302" x2="604" y2="310"/><line class="ax" x1="60" y1="308" x2="60" y2="326"/><circle class="bub" cx="60" cy="336" r="9"/><text class="bt" x="60" y="340">1</text><line class="ax" x1="164" y1="308" x2="164" y2="326"/><circle class="bub" cx="164" cy="336" r="9"/><text class="bt" x="164" y="340">2</text><line class="ax" x1="268" y1="308" x2="268" y2="326"/><circle class="bub" cx="268" cy="336" r="9"/><text class="bt" x="268" y="340">3</text><line class="ax" x1="372" y1="308" x2="372" y2="326"/><circle class="bub" cx="372" cy="336" r="9"/><text class="bt" x="372" y="340">4</text><line class="ax" x1="476" y1="308" x2="476" y2="326"/><circle class="bub" cx="476" cy="336" r="9"/><text class="bt" x="476" y="340">5</text><line class="ax" x1="580" y1="308" x2="580" y2="326"/><circle class="bub" cx="580" cy="336" r="9"/><text class="bt" x="580" y="340">6</text><polygon class="st-d roofband" points="54,132 90,112 550,112 586,132"/><rect class="st-d" x="60" y="132" width="520" height="168"/><line class="rib" x1="73" y1="136" x2="73" y2="300"/><line class="rib" x1="86" y1="136" x2="86" y2="300"/><line class="rib" x1="99" y1="136" x2="99" y2="300"/><line class="rib" x1="112" y1="136" x2="112" y2="300"/><line class="rib" x1="125" y1="136" x2="125" y2="300"/><line class="rib" x1="138" y1="136" x2="138" y2="300"/><line class="rib" x1="151" y1="136" x2="151" y2="300"/><line class="rib" x1="164" y1="136" x2="164" y2="300"/><line class="rib" x1="177" y1="136" x2="177" y2="300"/><line class="rib" x1="190" y1="136" x2="190" y2="300"/><line class="rib" x1="203" y1="136" x2="203" y2="300"/><line class="rib" x1="216" y1="136" x2="216" y2="300"/><line class="rib" x1="229" y1="136" x2="229" y2="300"/><line class="rib" x1="242" y1="136" x2="242" y2="300"/><line class="rib" x1="255" y1="136" x2="255" y2="300"/><line class="rib" x1="268" y1="136" x2="268" y2="300"/><line class="rib" x1="281" y1="136" x2="281" y2="300"/><line class="rib" x1="294" y1="136" x2="294" y2="300"/><line class="rib" x1="307" y1="136" x2="307" y2="300"/><line class="rib" x1="320" y1="136" x2="320" y2="300"/><line class="rib" x1="333" y1="136" x2="333" y2="300"/><line class="rib" x1="346" y1="136" x2="346" y2="300"/><line class="rib" x1="359" y1="136" x2="359" y2="300"/><line class="rib" x1="372" y1="136" x2="372" y2="300"/><line class="rib" x1="385" y1="136" x2="385" y2="300"/><line class="rib" x1="398" y1="136" x2="398" y2="300"/><line class="rib" x1="411" y1="136" x2="411" y2="300"/><line class="rib" x1="424" y1="136" x2="424" y2="300"/><line class="rib" x1="437" y1="136" x2="437" y2="300"/><line class="rib" x1="450" y1="136" x2="450" y2="300"/><line class="rib" x1="463" y1="136" x2="463" y2="300"/><line class="rib" x1="476" y1="136" x2="476" y2="300"/><line class="rib" x1="489" y1="136" x2="489" y2="300"/><line class="rib" x1="502" y1="136" x2="502" y2="300"/><line class="rib" x1="515" y1="136" x2="515" y2="300"/><line class="rib" x1="528" y1="136" x2="528" y2="300"/><line class="rib" x1="541" y1="136" x2="541" y2="300"/><line class="rib" x1="554" y1="136" x2="554" y2="300"/><line class="rib" x1="567" y1="136" x2="567" y2="300"/><rect class="win" x="68" y="146" width="504" height="16"/><g class="door"><rect x="186" y="204" width="60" height="96"/><line x1="186" y1="220" x2="246" y2="220"/><line x1="186" y1="236" x2="246" y2="236"/><line x1="186" y1="252" x2="246" y2="252"/><line x1="186" y1="268" x2="246" y2="268"/><line x1="186" y1="284" x2="246" y2="284"/></g><g class="door"><rect x="394" y="204" width="60" height="96"/><line x1="394" y1="220" x2="454" y2="220"/><line x1="394" y1="236" x2="454" y2="236"/><line x1="394" y1="252" x2="454" y2="252"/><line x1="394" y1="268" x2="454" y2="268"/><line x1="394" y1="284" x2="454" y2="284"/></g><rect class="st-d" x="506" y="240" width="26" height="60"/><rect class="st-d" x="174" y="94" width="50" height="18"/><rect class="st-d" x="382" y="94" width="50" height="18"/><g class="tag"><rect x="490" y="20" width="130" height="28"/><text x="502" y="39">EFTER · V 22</text></g></svg></div>
+            <div class="ba-layer ba-before"><svg viewBox="0 0 640 360" aria-hidden="true" focusable="false"><line class="gnd" x1="20" y1="300" x2="620" y2="300"/><line class="hatch" x1="24" y1="302" x2="16" y2="310"/><line class="hatch" x1="38" y1="302" x2="30" y2="310"/><line class="hatch" x1="52" y1="302" x2="44" y2="310"/><line class="hatch" x1="66" y1="302" x2="58" y2="310"/><line class="hatch" x1="80" y1="302" x2="72" y2="310"/><line class="hatch" x1="94" y1="302" x2="86" y2="310"/><line class="hatch" x1="108" y1="302" x2="100" y2="310"/><line class="hatch" x1="122" y1="302" x2="114" y2="310"/><line class="hatch" x1="136" y1="302" x2="128" y2="310"/><line class="hatch" x1="150" y1="302" x2="142" y2="310"/><line class="hatch" x1="164" y1="302" x2="156" y2="310"/><line class="hatch" x1="178" y1="302" x2="170" y2="310"/><line class="hatch" x1="192" y1="302" x2="184" y2="310"/><line class="hatch" x1="206" y1="302" x2="198" y2="310"/><line class="hatch" x1="220" y1="302" x2="212" y2="310"/><line class="hatch" x1="234" y1="302" x2="226" y2="310"/><line class="hatch" x1="248" y1="302" x2="240" y2="310"/><line class="hatch" x1="262" y1="302" x2="254" y2="310"/><line class="hatch" x1="276" y1="302" x2="268" y2="310"/><line class="hatch" x1="290" y1="302" x2="282" y2="310"/><line class="hatch" x1="304" y1="302" x2="296" y2="310"/><line class="hatch" x1="318" y1="302" x2="310" y2="310"/><line class="hatch" x1="332" y1="302" x2="324" y2="310"/><line class="hatch" x1="346" y1="302" x2="338" y2="310"/><line class="hatch" x1="360" y1="302" x2="352" y2="310"/><line class="hatch" x1="374" y1="302" x2="366" y2="310"/><line class="hatch" x1="388" y1="302" x2="380" y2="310"/><line class="hatch" x1="402" y1="302" x2="394" y2="310"/><line class="hatch" x1="416" y1="302" x2="408" y2="310"/><line class="hatch" x1="430" y1="302" x2="422" y2="310"/><line class="hatch" x1="444" y1="302" x2="436" y2="310"/><line class="hatch" x1="458" y1="302" x2="450" y2="310"/><line class="hatch" x1="472" y1="302" x2="464" y2="310"/><line class="hatch" x1="486" y1="302" x2="478" y2="310"/><line class="hatch" x1="500" y1="302" x2="492" y2="310"/><line class="hatch" x1="514" y1="302" x2="506" y2="310"/><line class="hatch" x1="528" y1="302" x2="520" y2="310"/><line class="hatch" x1="542" y1="302" x2="534" y2="310"/><line class="hatch" x1="556" y1="302" x2="548" y2="310"/><line class="hatch" x1="570" y1="302" x2="562" y2="310"/><line class="hatch" x1="584" y1="302" x2="576" y2="310"/><line class="hatch" x1="598" y1="302" x2="590" y2="310"/><line class="hatch" x1="612" y1="302" x2="604" y2="310"/><line class="ax" x1="60" y1="308" x2="60" y2="326"/><circle class="bub" cx="60" cy="336" r="9"/><text class="bt" x="60" y="340">1</text><line class="ax" x1="164" y1="308" x2="164" y2="326"/><circle class="bub" cx="164" cy="336" r="9"/><text class="bt" x="164" y="340">2</text><line class="ax" x1="268" y1="308" x2="268" y2="326"/><circle class="bub" cx="268" cy="336" r="9"/><text class="bt" x="268" y="340">3</text><line class="ax" x1="372" y1="308" x2="372" y2="326"/><circle class="bub" cx="372" cy="336" r="9"/><text class="bt" x="372" y="340">4</text><line class="ax" x1="476" y1="308" x2="476" y2="326"/><circle class="bub" cx="476" cy="336" r="9"/><text class="bt" x="476" y="340">5</text><line class="ax" x1="580" y1="308" x2="580" y2="326"/><circle class="bub" cx="580" cy="336" r="9"/><text class="bt" x="580" y="340">6</text><rect class="st-d" x="51" y="296" width="18" height="8"/><rect class="st-d" x="155" y="296" width="18" height="8"/><rect class="st-d" x="259" y="296" width="18" height="8"/><rect class="st-d" x="363" y="296" width="18" height="8"/><rect class="st-d" x="467" y="296" width="18" height="8"/><rect class="st-d" x="571" y="296" width="18" height="8"/><polyline class="st-p" points="60,300 60,132 580,132 580,300"/><line class="st-p" x1="268" y1="300" x2="268" y2="132"/><line class="st-p" x1="372" y1="300" x2="372" y2="132"/><line class="st-p" x1="476" y1="300" x2="476" y2="132"/><line class="st-p" x1="580" y1="300" x2="580" y2="132"/><line class="st-o col" x1="60" y1="296" x2="60" y2="132"/><line class="st-o col" x1="164" y1="296" x2="164" y2="132"/><line class="st-o col" x1="268" y1="296" x2="268" y2="132"/><line class="st-o beam" x1="60" y1="132" x2="164" y2="132"/><g class="eq"><rect x="424" y="280" width="92" height="16" rx="3"/><circle cx="436" cy="294" r="5"/><circle cx="504" cy="294" r="5"/><circle cx="470" cy="294" r="5"/><rect x="450" y="260" width="40" height="20"/><line x1="462" y1="266" x2="366" y2="62"/><line x1="476" y1="266" x2="366" y2="62"/><line x1="366" y1="62" x2="366" y2="170"/><rect x="362" y="170" width="8" height="8"/><line class="load" x1="370" y1="186" x2="370" y2="268"/></g><g class="eq"><rect x="190" y="292" width="54" height="6"/><rect x="190" y="285" width="54" height="6"/><rect x="190" y="278" width="54" height="6"/></g><g class="tag"><rect x="20" y="20" width="122" height="28"/><text x="32" y="39">FÖRE · V 06</text></g></svg></div>
+            <input class="ba-range" type="range" id="ba-range" min="0" max="100" step="1" value="50" aria-label="Jämför före och efter: vecka 6 mot vecka 22" aria-valuetext="Hälften före, hälften efter">
+            <span class="ba-line" aria-hidden="true"><span class="ba-knob"><svg viewBox="0 0 24 24" focusable="false"><path d="M9 7 L4 12 L9 17 M15 7 L20 12 L15 17" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/></svg></span></span>
+          </div>
+          <p class="ba-hint" aria-hidden="true"><span>Före · vecka 6</span><span>Dra i skiljelinjen</span><span>Efter · vecka 22</span></p>
+        </div>
+        <div class="tool-body">
+          <p class="tool-no">Verktyg 03 · Lite-demo</p>
+          <h3 id="t-3">Före/Efter</h3>
+          <dl class="pl">
+            <dt>Problem</dt><dd>Framdrift är svår att visa i ord.</dd>
+            <dt>Lösning</dt><dd>Två bilder, en dragbar skiljelinje och en fristående fil som kan skickas vidare. Visades i projektet och togs väl emot.</dd>
+          </dl>
+          <ul class="tags" aria-label="Funktioner">
+            <li>Dragbar skiljelinje</li><li>Fristående visningsfil</li><li>Framdrift</li>
+          </ul>
+          <p class="note">Demon använder egenritade bilder av en tidig och en sen byggfas.</p>
+        </div>
+      </article>
 
-const R = 10;
-const UP = new THREE.Vector3(0,1,0);
+      <article class="tool reveal" aria-labelledby="t-4">
+        <div class="tool-art draw"><svg viewBox="0 0 400 240" aria-hidden="true" focusable="false"><g class="paper"><rect x="63" y="86" width="88" height="118"/><rect class="tb" x="117" y="182" width="30" height="18"/><line x1="73" y1="104" x2="123" y2="104"/><line x1="73" y1="116" x2="107" y2="116"/></g><g class="paper"><rect x="58" y="80" width="88" height="118"/><rect class="tb" x="112" y="176" width="30" height="18"/><line x1="68" y1="98" x2="118" y2="98"/><line x1="68" y1="110" x2="102" y2="110"/></g><g class="paper"><rect x="53" y="74" width="88" height="118"/><rect class="tb" x="107" y="170" width="30" height="18"/><line x1="63" y1="92" x2="113" y2="92"/><line x1="63" y1="104" x2="97" y2="104"/></g><g class="paper"><rect x="48" y="68" width="88" height="118"/><rect class="tb" x="102" y="164" width="30" height="18"/><line x1="58" y1="86" x2="108" y2="86"/><line x1="58" y1="98" x2="92" y2="98"/></g><g class="paper"><rect x="43" y="62" width="88" height="118"/><rect class="tb" x="97" y="158" width="30" height="18"/><line x1="53" y1="80" x2="103" y2="80"/><line x1="53" y1="92" x2="87" y2="92"/></g><g class="paper"><rect x="38" y="56" width="88" height="118"/><rect class="tb" x="92" y="152" width="30" height="18"/><line x1="48" y1="74" x2="98" y2="74"/><line x1="48" y1="86" x2="82" y2="86"/></g><g class="paper"><rect x="33" y="50" width="88" height="118"/><rect class="tb" x="87" y="146" width="30" height="18"/><line x1="43" y1="68" x2="93" y2="68"/><line x1="43" y1="80" x2="77" y2="80"/></g><g class="paper"><rect x="28" y="44" width="88" height="118"/><rect class="tb" x="82" y="140" width="30" height="18"/><line x1="38" y1="62" x2="88" y2="62"/><line x1="38" y1="74" x2="72" y2="74"/></g><text class="mono s" x="28" y="214">CA 240 PDF</text><path class="link ln" pathLength="1" d="M150 128 C 200 128, 202 74, 256 74"/><path class="arrow" d="M250 70 L258 74 L250 78"/><path class="link ln" pathLength="1" d="M150 128 C 200 128, 202 128, 256 128"/><path class="arrow" d="M250 124 L258 128 L250 132"/><path class="link ln" pathLength="1" d="M150 128 C 200 128, 202 182, 256 182"/><path class="arrow" d="M250 178 L258 182 L250 186"/><circle class="node" cx="150" cy="128" r="5"/><g class="binder"><rect x="264" y="52" width="112" height="44"/><rect class="spine sp-d" x="264" y="52" width="16" height="44"/><circle cx="272" cy="74" r="3.2"/><text class="mono" x="290" y="71">OMRÅDE A</text><line x1="290" y1="82" x2="360" y2="82"/></g><g class="binder"><rect x="264" y="106" width="112" height="44"/><rect class="spine sp-d" x="264" y="106" width="16" height="44"/><circle cx="272" cy="128" r="3.2"/><text class="mono" x="290" y="125">OMRÅDE B</text><line x1="290" y1="136" x2="360" y2="136"/></g><g class="binder"><rect x="264" y="160" width="112" height="44"/><rect class="spine sp-o" x="264" y="160" width="16" height="44"/><circle cx="272" cy="182" r="3.2"/><text class="mono" x="290" y="179">OMRÅDE C</text><line x1="290" y1="190" x2="360" y2="190"/></g><text class="mono s" x="264" y="226">PÄRM PER OMRÅDE</text></svg></div>
+        <div class="tool-body">
+          <p class="tool-no">Verktyg 04 · Ritningspärmar</p>
+          <h3 id="t-4">BinderBuilder</h3>
+          <dl class="pl">
+            <dt>Problem</dt><dd>En leverans är cirka 240 PDF som ska sorteras per område.</dd>
+            <dt>Lösning</dt><dd>Läser leveransen, sorterar varje ritning till rätt område och bygger färdiga PDF-pärmar. Ett sorteringsjobb blir en körning.</dd>
+          </dl>
+          <ul class="tags" aria-label="Funktioner">
+            <li>Ritningsleveranser</li><li>Pärm per område</li><li>PDF</li>
+          </ul>
+        </div>
+      </article>
+    </div>
 
-// ljus
-scene.add(new THREE.HemisphereLight(0xfff4e6, 0x8fb8ff, 1.15));
-const sun = new THREE.DirectionalLight(0xffffff, 1.7);
-sun.position.set(8, 22, 10);
-sun.castShadow = true;
-sun.shadow.mapSize.set(1024,1024);
-Object.assign(sun.shadow.camera, {left:-14,right:14,top:14,bottom:-14,near:1,far:50});
-sun.shadow.bias = -0.002;
-scene.add(sun);
+    <h3 class="more-h">Fler verktyg</h3>
+    <ul class="more">
+      <li class="reveal"><span class="m-cat">Planering</span><span class="m-name">4D-planeringsappen</span><span class="m-desc">Läser Powerproject-filer direkt, med tavla, Gantt och beroenden.</span></li>
+      <li class="reveal"><span class="m-cat">Planering</span><span class="m-name">Production Cockpit</span><span class="m-desc">Tavla, heatmap, Gantt med automatisk kaskad och AI-förslag på aktivitetsföljder.</span></li>
+      <li class="reveal"><span class="m-cat">Planering</span><span class="m-name">Produktionsplanering</span><span class="m-desc">Aktiviteter på skedesplaner per månad, uppdateras under mötet.</span></li>
+      <li class="reveal"><span class="m-cat">Planering</span><span class="m-name">Planeringskoll 4D</span><span class="m-desc">Automatiska rimlighetskontroller av tidplanen.</span></li>
+      <li class="reveal"><span class="m-cat">Modell</span><span class="m-name">Punktmolnsvisare</span><span class="m-desc">Egna LAZ-moln, testad med 1,4 GB, koordinater, IFC och volymuttag.</span></li>
+      <li class="reveal"><span class="m-cat">Modell</span><span class="m-name">Ritningsregister och 3D-redigerare</span><span class="m-desc">Ritningsregister i .NET 8 och egen 3D-redigerare för DWG, IFC och DXF.</span></li>
+      <li class="reveal"><span class="m-cat">Data</span><span class="m-name">SharePoint-spegel</span><span class="m-desc">Speglar en plats till lokal disk med ett klick, bara ändrade filer.</span></li>
+      <li class="reveal"><span class="m-cat m-soon">På gång</span><span class="m-name">Mötesprotokoll</span><span class="m-desc">Spelar in, transkriberar och skriver protokoll lokalt, utan molntjänster.</span></li>
+    </ul>
 
-// seedad slump så planeten ser likadan ut varje gång
-let seed = 7;
-const rnd = () => (seed = (seed*16807) % 2147483647) / 2147483647;
+    <div class="calc reveal" id="kalkyl">
+      <div class="calc-intro">
+        <h3>Vad kostar handgreppen?</h3>
+        <p>Verktygen tar över moment som annars görs för hand varje vecka. Ställ in vad momenten tar i ditt projekt och se vad det kostar. Startvärdena är exempel.</p>
+      </div>
+      <form class="calc-form" id="calc">
+        <fieldset>
+          <legend>Timmar per vecka som går till</legend>
+          <div class="crow">
+            <label for="c-1">Sortera ritningsleveranser i pärmar per område <span class="by">BinderBuilder</span></label>
+            <input type="range" id="c-1" data-h min="0" max="8" step="0.5" value="1" aria-valuetext="1 timme">
+            <span class="cval" aria-hidden="true">1 h</span>
+          </div>
+          <div class="crow">
+            <label for="c-2">Hämta ändrade filer från projektplatsen <span class="by">SharePoint-spegel</span></label>
+            <input type="range" id="c-2" data-h min="0" max="8" step="0.5" value="1" aria-valuetext="1 timme">
+            <span class="cval" aria-hidden="true">1 h</span>
+          </div>
+          <div class="crow">
+            <label for="c-3">Färga modellen och ta fram lägesbilder till byggmötet <span class="by">Tidplan i modellen</span></label>
+            <input type="range" id="c-3" data-h min="0" max="8" step="0.5" value="1" aria-valuetext="1 timme">
+            <span class="cval" aria-hidden="true">1 h</span>
+          </div>
+          <div class="crow">
+            <label for="c-4">Granska tidplanen efter orimliga varaktigheter <span class="by">Planeringskoll 4D</span></label>
+            <input type="range" id="c-4" data-h min="0" max="8" step="0.5" value="1" aria-valuetext="1 timme">
+            <span class="cval" aria-hidden="true">1 h</span>
+          </div>
+        </fieldset>
+        <fieldset>
+          <legend>Förutsättningar</legend>
+          <div class="crow">
+            <label for="c-rate">Timkostnad</label>
+            <input type="range" id="c-rate" min="300" max="1500" step="50" value="700" aria-valuetext="700 kronor">
+            <span class="cval" aria-hidden="true">700 kr</span>
+          </div>
+          <div class="crow">
+            <label for="c-ppl">Personer som gör samma moment</label>
+            <input type="range" id="c-ppl" min="1" max="10" step="1" value="1" aria-valuetext="1 person">
+            <span class="cval" aria-hidden="true">1</span>
+          </div>
+          <div class="crow">
+            <label for="c-mon">Projektets längd</label>
+            <input type="range" id="c-mon" min="6" max="60" step="6" value="24" aria-valuetext="24 månader">
+            <span class="cval" aria-hidden="true">24 mån</span>
+          </div>
+        </fieldset>
+        <p class="calc-sticky" aria-hidden="true"><span>Per projekt</span> <b class="js-proj">252 000 kr</b></p>
+        <p class="calc-nojs">Reglagen räknar om resultatet när JavaScript är påslaget.</p>
+      </form>
+      <div class="calc-out" id="calc-out" aria-live="polite" aria-atomic="true">
+        <dl>
+          <div><dt>Per vecka</dt><dd id="o-week">4 h</dd></div>
+          <div><dt>Per år</dt><dd id="o-year">180 h · 126 000 kr</dd></div>
+          <div class="big"><dt>Exempel: handgrepp per projekt, <span id="o-mon">24</span> månader</dt><dd class="js-proj" id="o-proj">252 000 kr</dd></div>
+        </dl>
+        <p class="calc-f">Räknat som timmar per vecka × personer × timkostnad, med 45 arbetsveckor per år. Exempel som visar storleksordningen, inte ett mätresultat.</p>
+      </div>
+    </div>
+  </div>
+</section>
 
-const mat = c => new THREE.MeshStandardMaterial({color:c, flatShading:true, roughness:.9});
-const planet = new THREE.Group();
-scene.add(planet);
+<section class="sec" id="arbetssatt" aria-labelledby="h-arbetssatt">
+  <div class="wrap">
+    <p class="over"><span class="num">03</span>Arbetssätt</p>
+    <h2 id="h-arbetssatt">Från problem på bygget till verktyg i drift</h2>
+    <ol class="steps">
+      <li class="reveal"><span class="step-n">1</span><p>Ett moment upprepas varje vecka, eller en fråga går inte att besvara på mötet.</p></li>
+      <li class="reveal"><span class="step-n">2</span><p>Jag bygger ett verktyg för just det, med AI som utvecklingsstöd.</p></li>
+      <li class="reveal"><span class="step-n">3</span><p>Verktyget används i den löpande planeringen och förbättras där.</p></li>
+    </ol>
+  </div>
+</section>
 
-// planetkropp – lågpoly med lite ojämnhet
-const pg = new THREE.IcosahedronGeometry(R, 5);
-const pos = pg.attributes.position;
-const v = new THREE.Vector3();
-const bump = new Map();
-for(let i=0;i<pos.count;i++){
-  v.fromBufferAttribute(pos,i);
-  const k = `${v.x.toFixed(2)},${v.y.toFixed(2)},${v.z.toFixed(2)}`;
-  if(!bump.has(k)) bump.set(k, 1 + (rnd()-.5)*0.018);
-  v.multiplyScalar(bump.get(k));
-  pos.setXYZ(i, v.x, v.y, v.z);
-}
-pg.computeVertexNormals();
-const ground = new THREE.Mesh(pg, mat(0x9fd98b));
-ground.receiveShadow = true;
-planet.add(ground);
+<section class="sec" id="erfarenhet" aria-labelledby="h-erfarenhet">
+  <div class="wrap">
+    <p class="over"><span class="num">04</span>Erfarenhet</p>
+    <h2 id="h-erfarenhet">Erfarenhet</h2>
+    <ol class="tl">
+      <li class="reveal">
+        <p class="tl-when">2025–</p>
+        <div class="tl-body">
+          <h3>Lead Planner, produktionsplanering och VDC</h3>
+          <p class="tl-org">Stor byggentreprenör · Industriprojekt i miljardklassen · Planerare/VDC</p>
+          <p>Produktionsplanering, 4–6-veckorsplanering, plan mot utfall, APD-planer i 2D och 3D, logistik och lyftplanering, 4D-simulering, punktmolnsskanningar och lägesbilder till byggmöten. Äger produktionsplaneringsmötet.</p>
+        </div>
+      </li>
+      <li class="reveal">
+        <p class="tl-when">2020–2025</p>
+        <div class="tl-body">
+          <h3>Teknikansvarig broprojekt och Tekla-förvaltningsledare</h3>
+          <p class="tl-org">Teknikkonsult · Infrastruktur · Bro- och anläggningskonstruktör</p>
+          <p>Programansvarig för Tekla Structures inom anläggning i Sverige. Som teknikansvarig för broprojekt åt en statlig infrastrukturbeställare ledde jag team på 5–6 personer från förfrågan till godkända bygghandlingar och byggplatsuppföljning, med timmar mot budget. Ledande projektör för ett paket om 15–20 byggnadsverk i ett järnvägsprojekt i norra Sverige.</p>
+        </div>
+      </li>
+      <li class="reveal">
+        <p class="tl-when">2014–2020</p>
+        <div class="tl-body">
+          <h3>Ledande projektör och uppdragsledare</h3>
+          <p class="tl-org">Teknikkonsult · Byggnad · Byggnadskonstruktör</p>
+          <p>Stål, platsgjutet, prefab, limträ och KL-trä, 3D-modellering och digital projektering. Styrde kollegor lokalt och i Indien, uppdragsledare mot slutet.</p>
+        </div>
+      </li>
+      <li class="reveal">
+        <p class="tl-when">2011–2014</p>
+        <div class="tl-body">
+          <h3>Högskolan i Gävle</h3>
+          <p class="tl-org">Studier · Byggnadsingenjör</p>
+          <p>Arkitektur och miljö.</p>
+        </div>
+      </li>
+    </ol>
+  </div>
+</section>
 
-function place(obj, dir, spin = rnd()*Math.PI*2, lift = 0){
-  dir = dir.clone().normalize();
-  obj.position.copy(dir).multiplyScalar(R + lift);
-  obj.quaternion.setFromUnitVectors(UP, dir);
-  obj.rotateY(spin);
-  planet.add(obj);
-  return obj;
-}
-const shadowAll = o => o.traverse(m=>{ if(m.isMesh){ m.castShadow = true; m.receiveShadow = true; } });
+<section class="sec" id="program" aria-labelledby="h-program">
+  <div class="wrap">
+    <p class="over"><span class="num">05</span>Verktygslåda</p>
+    <h2 id="h-program">Program jag arbetar i</h2>
+    <dl class="kit reveal">
+      <div><dt>Modell</dt><dd>Tekla (10+ år), Trimble Connect, Revit, Rhino/Grasshopper, AutoCAD, Navisworks, StreamBIM</dd></div>
+      <div><dt>Planering</dt><dd>Synchro 4D Pro, Primavera P6, Powerproject, MS Project</dd></div>
+      <div><dt>Data och utveckling</dt><dd>Python, .NET 8/WPF, CloudCompare, QGIS, Bluebeam</dd></div>
+    </dl>
+  </div>
+</section>
 
-// positioner: fibonacci-sfär, punkt 0 = start
-const ALL = [...SPECIAL_LIST(), ...TOOL_LIST()];
-function SPECIAL_LIST(){ return window.__SPECIAL; }
-function TOOL_LIST(){ return window.__TOOLS; }
-const N = ALL.length + 1;
-const dirs = [];
-for(let i=0;i<N;i++){
-  const y = 1 - (i/(N-1))*2, r = Math.sqrt(1-y*y), th = i*Math.PI*(3-Math.sqrt(5));
-  dirs.push(new THREE.Vector3(Math.cos(th)*r, y, Math.sin(th)*r));
-}
-const spawn = dirs[0];
+<section class="sec sec-contact" id="kontakt" aria-labelledby="h-kontakt">
+  <div class="wrap">
+    <p class="over"><span class="num">06</span>Kontakt</p>
+    <h2 id="h-kontakt">Hör av dig</h2>
+    <p class="intro">Vill du prata planering, VDC eller digitalisering i byggprojekt? Skicka ett mejl eller hitta mig på LinkedIn.</p>
+    <ul class="contact">
+      <li><span class="c-k">E-post</span><span class="c-v"><span class="ph">[E-POST]</span></span></li>
+      <li><span class="c-k">LinkedIn</span><span class="c-v"><span class="ph">[LINKEDIN]</span></span></li>
+      <li><span class="c-k">Ort</span><span class="c-v">Dalarna</span></li>
+    </ul>
+    <p class="coda">Nästa handgrepp blir också ett verktyg.</p>
+  </div>
+</section>
 
-// emoji-skylt
-function emojiSprite(e, col){
-  const c = document.createElement("canvas"); c.width = c.height = 128;
-  const g = c.getContext("2d");
-  g.fillStyle = "#fffdf8"; g.beginPath(); g.arc(64,64,58,0,Math.PI*2); g.fill();
-  g.lineWidth = 8; g.strokeStyle = col; g.stroke();
-  g.font = "64px 'Apple Color Emoji','Segoe UI Emoji','Noto Color Emoji',sans-serif";
-  g.textAlign = "center"; g.textBaseline = "middle"; g.fillText(e, 64, 70);
-  const tex = new THREE.CanvasTexture(c); tex.colorSpace = THREE.SRGBColorSpace;
-  const s = new THREE.Sprite(new THREE.SpriteMaterial({map:tex, depthWrite:false}));
-  s.scale.set(1.1,1.1,1.1);
-  return s;
-}
+</main>
 
-// stationer
-const stations = [];
-function makeStation(item){
-  const g = new THREE.Group();
-  const isHouse = item.special === "profil", isMail = item.special === "kontakt";
-  if(isMail){
-    const post = new THREE.Mesh(new THREE.CylinderGeometry(.08,.08,1,6), mat(0x7a5a43)); post.position.y=.5; g.add(post);
-    const box = new THREE.Mesh(new THREE.BoxGeometry(.7,.5,.45), mat(0xff8a3d)); box.position.y=1.15; g.add(box);
-    const lid = new THREE.Mesh(new THREE.CylinderGeometry(.225,.225,.7,10,1,false,0,Math.PI), mat(0xff8a3d));
-    lid.rotation.z = Math.PI/2; lid.position.y = 1.4; g.add(lid);
-    const flag = new THREE.Mesh(new THREE.BoxGeometry(.04,.35,.18), mat(0xff4d6d)); flag.position.set(.38,1.45,0); g.add(flag);
-  } else {
-    const w = isHouse ? 1.6 : 1.2 + rnd()*.3, h = isHouse ? 1.1 : .8 + rnd()*.5;
-    const body = new THREE.Mesh(new THREE.BoxGeometry(w,h,w*.85), mat(isHouse?0xfff1de:0xfffaf0)); body.position.y = h/2; g.add(body);
-    const roof = new THREE.Mesh(new THREE.ConeGeometry(w*.82, .7, 4), mat(new THREE.Color(item.col)));
-    roof.position.y = h + .35; roof.rotation.y = Math.PI/4; g.add(roof);
-    const door = new THREE.Mesh(new THREE.BoxGeometry(.32,.5,.04), mat(0x7a5a43)); door.position.set(0,.25,w*.425+.01); g.add(door);
-    const win = new THREE.Mesh(new THREE.BoxGeometry(.26,.22,.04), mat(0x9fd4ff));
-    win.position.set(w*.3, h*.62, w*.425+.01); g.add(win);
-    const win2 = win.clone(); win2.position.x = -w*.3; g.add(win2);
-  }
-  shadowAll(g);
-  const sign = emojiSprite(item.e, item.col);
-  sign.position.y = isMail ? 2.3 : 2.6;
-  g.add(sign);
-  g.traverse(m=>m.userData.station = item);
-  return {g, sign, item};
-}
-ALL.forEach((item, i) => {
-  const s = makeStation(item);
-  // låt dörren peka mot planetens "norr" ungefär
-  place(s.g, dirs[i+1], rnd()*Math.PI*2);
-  s.dir = dirs[i+1].clone();
-  s.baseY = s.sign.position.y;
-  stations.push(s);
-});
-
-// dekor
-const taken = [spawn, ...dirs.slice(1)];
-const free = d => taken.every(t => t.angleTo(d) > 0.2);
-function randDir(){ return new THREE.Vector3(rnd()*2-1, rnd()*2-1, rnd()*2-1).normalize(); }
-function tree(){
-  const g = new THREE.Group();
-  const trunk = new THREE.Mesh(new THREE.CylinderGeometry(.08,.11,.5,5), mat(0x8a5a3b)); trunk.position.y=.25; g.add(trunk);
-  const greens = [0x4fae6a,0x6cc47a,0x3e9b5f,0x7ed38b];
-  const s = .7 + rnd()*.6;
-  const c1 = new THREE.Mesh(new THREE.ConeGeometry(.5*s, 1*s, 6), mat(greens[Math.floor(rnd()*4)])); c1.position.y = .5+.45*s; g.add(c1);
-  if(rnd()>.4){ const c2 = c1.clone(); c2.scale.setScalar(.7); c2.position.y += .45*s; g.add(c2); }
-  shadowAll(g); return g;
-}
-function rock(){ const m = new THREE.Mesh(new THREE.DodecahedronGeometry(.18+rnd()*.25,0), mat(0xc9c2d6)); m.position.y=.1; shadowAll(m); return m; }
-function flower(){
-  const g = new THREE.Group();
-  const cols = [0xff7aa8,0xffc94a,0xffffff,0x9b8cff];
-  const m = new THREE.Mesh(new THREE.IcosahedronGeometry(.08,0), mat(cols[Math.floor(rnd()*4)]));
-  m.position.y=.12; g.add(m); return g;
-}
-function crane(){
-  const g = new THREE.Group(), y = 0xffc23d;
-  const H = 4 + rnd()*1.5;
-  const mast = new THREE.Mesh(new THREE.BoxGeometry(.28,H,.28), mat(y)); mast.position.y = H/2; g.add(mast);
-  const jib = new THREE.Mesh(new THREE.BoxGeometry(4,.2,.22), mat(y)); jib.position.set(1.2,H+.1,0); g.add(jib);
-  const cab = new THREE.Mesh(new THREE.BoxGeometry(.45,.4,.4), mat(0xffffff)); cab.position.set(0,H-.15,.3); g.add(cab);
-  const cw = new THREE.Mesh(new THREE.BoxGeometry(.5,.4,.4), mat(0x7d7a8c)); cw.position.set(-.6,H-.05,0); g.add(cw);
-  const line = new THREE.Mesh(new THREE.CylinderGeometry(.02,.02,1.6,4), mat(0x555555)); line.position.set(2.6,H-.7,0); g.add(line);
-  const load = new THREE.Mesh(new THREE.BoxGeometry(.4,.3,.4), mat(0x5b8cff)); load.position.set(2.6,H-1.6,0); g.add(load);
-  const base = new THREE.Mesh(new THREE.BoxGeometry(1,.2,1), mat(0x9a96aa)); base.position.y=.1; g.add(base);
-  shadowAll(g); g.userData.jib = true; return g;
-}
-const cranes = [];
-for(let i=0;i<3;i++){
-  let d; do { d = randDir(); } while(!free(d) || taken.some(t=>t.angleTo(d)<.32));
-  const c = crane(); place(c, d); cranes.push(c); taken.push(d);
-}
-for(let i=0;i<110;i++){ const d = randDir(); if(free(d)) place(tree(), d); }
-for(let i=0;i<40;i++){ const d = randDir(); if(free(d)) place(rock(), d); }
-for(let i=0;i<120;i++){ const d = randDir(); if(taken.every(t=>t.angleTo(d)>.12)) place(flower(), d); }
-
-// moln
-const clouds = new THREE.Group(); scene.add(clouds);
-for(let i=0;i<9;i++){
-  const c = new THREE.Group();
-  const n = 3 + Math.floor(rnd()*3);
-  for(let j=0;j<n;j++){
-    const p = new THREE.Mesh(new THREE.IcosahedronGeometry(.5+rnd()*.5,1), new THREE.MeshStandardMaterial({color:0xffffff, flatShading:true, roughness:1}));
-    p.position.set(j*.6-n*.3, rnd()*.3, rnd()*.4); c.add(p);
-  }
-  const d = randDir(); c.position.copy(d).multiplyScalar(R+5+rnd()*2);
-  c.lookAt(0,0,0); clouds.add(c);
-}
-
-// spelaren – liten figur med bygghjälm
-const player = new THREE.Group();
-const body = new THREE.Mesh(new THREE.CapsuleGeometry(.26,.34,4,8), mat(0x5b8cff)); body.position.y=.62; player.add(body);
-const vest = new THREE.Mesh(new THREE.CylinderGeometry(.285,.285,.22,10), mat(0xff8a3d)); vest.position.y=.7; player.add(vest);
-const head = new THREE.Mesh(new THREE.SphereGeometry(.24,12,10), mat(0xffd9b8)); head.position.y=1.15; player.add(head);
-const helm = new THREE.Mesh(new THREE.SphereGeometry(.27,12,8,0,Math.PI*2,0,Math.PI/2), mat(0xffc23d)); helm.position.y=1.2; player.add(helm);
-const brim = new THREE.Mesh(new THREE.CylinderGeometry(.33,.33,.04,14), mat(0xffc23d)); brim.position.set(0,1.21,-.05); player.add(brim);
-const eyeM = mat(0x2b2a3a);
-const e1 = new THREE.Mesh(new THREE.SphereGeometry(.03,6,6), eyeM); e1.position.set(.08,1.15,-.22); player.add(e1);
-const e2 = e1.clone(); e2.position.x = -.08; player.add(e2);
-const legM = mat(0x3c3b55);
-const l1 = new THREE.Mesh(new THREE.BoxGeometry(.12,.3,.12), legM); l1.position.set(.11,.18,0); player.add(l1);
-const l2 = l1.clone(); l2.position.x = -.11; player.add(l2);
-shadowAll(player);
-player.position.set(0, R, 0);
-scene.add(player);
-const shadowBlob = new THREE.Mesh(new THREE.CircleGeometry(.4,16), new THREE.MeshBasicMaterial({color:0x000000, transparent:true, opacity:.12}));
-shadowBlob.rotation.x = -Math.PI/2; shadowBlob.position.set(0,R+.02,0); scene.add(shadowBlob);
-
-// starta med spawn-punkten högst upp
-planet.quaternion.setFromUnitVectors(spawn, UP);
-
-// kamera
-function resize(){
-  const w = innerWidth, h = innerHeight;
-  renderer.setSize(w, h, false);
-  camera.aspect = w/h;
-  const portrait = h > w;
-  camera.fov = portrait ? 62 : 45;
-  if(portrait){ camera.position.set(0, R + 8, 9); camera.lookAt(0, R - 3.2, -1.5); }
-  else { camera.position.set(0, R + 7.5, 11.5); camera.lookAt(0, R - 1.2, -2); }
-  camera.updateProjectionMatrix();
-}
-addEventListener("resize", resize); resize();
-
-// input
-const keys = {};
-let started = false, target = null, pendingOpen = null, near = null;
-addEventListener("keydown", e => {
-  keys[e.key.toLowerCase()] = true;
-  if((e.key==="e"||e.key==="E"||e.key==="Enter") && near && started){ window.__showSheet(near.item); }
-  if(e.key==="Escape"){ window.__closeAll(); }
-});
-addEventListener("keyup", e => keys[e.key.toLowerCase()] = false);
-
-const ray = new THREE.Raycaster(), ndc = new THREE.Vector2();
-let downAt = null;
-canvas.addEventListener("pointerdown", e => downAt = {x:e.clientX, y:e.clientY});
-canvas.addEventListener("pointerup", e => {
-  if(!started || !downAt) return;
-  if(Math.hypot(e.clientX-downAt.x, e.clientY-downAt.y) > 8) return;
-  ndc.set(e.clientX/innerWidth*2-1, -(e.clientY/innerHeight)*2+1);
-  ray.setFromCamera(ndc, camera);
-  const hits = ray.intersectObjects(planet.children, true);
-  if(!hits.length) return;
-  const st = hits[0].object.userData.station;
-  if(st){
-    const s = stations.find(x=>x.item===st);
-    // gå till punkten framför stationen
-    target = s.dir.clone(); pendingOpen = s;
-  } else {
-    target = planet.worldToLocal(hits[0].point.clone()).normalize();
-    pendingOpen = null;
-  }
-  window.__closeSheet();
-});
-
-// spel-loop
-const clock = new THREE.Clock();
-const TOUCH = matchMedia("(pointer: coarse)").matches;
-const prompt = document.getElementById("prompt");
-let walkT = 0, facing = 0;
-const tmp = new THREE.Vector3(), tmpQ = new THREE.Quaternion();
-function rotateToward(dirWorld, step){
-  const axis = tmp.copy(dirWorld).cross(UP);
-  const len = axis.length(); if(len < 1e-5) return 0;
-  axis.divideScalar(len);
-  const ang = dirWorld.angleTo(UP);
-  const s = Math.min(step, ang);
-  planet.quaternion.premultiply(tmpQ.setFromAxisAngle(axis, s));
-  return ang - s;
-}
-function loop(){
-  const dt = Math.min(clock.getDelta(), .05);
-  const t = clock.elapsedTime;
-  let moving = false;
-
-  if(started && !window.__uiOpen()){
-    let x = 0, z = 0;
-    if(keys["w"]||keys["arrowup"]) z -= 1;
-    if(keys["s"]||keys["arrowdown"]) z += 1;
-    if(keys["a"]||keys["arrowleft"]) x -= 1;
-    if(keys["d"]||keys["arrowright"]) x += 1;
-    const speed = 0.36 * dt; // rad/s
-    if(x||z){
-      target = null; pendingOpen = null;
-      const f = new THREE.Vector3(x,0,z).normalize();
-      facing = Math.atan2(-f.x, -f.z);
-      const dir = f.clone().multiplyScalar(.2).add(UP).normalize(); // punkt strax framför
-      rotateToward(dir, speed);
-      moving = true;
-    } else if(target){
-      const w = target.clone().applyQuaternion(planet.quaternion);
-      const flat = new THREE.Vector3(w.x,0,w.z);
-      if(flat.lengthSq() > 1e-6) facing = Math.atan2(-flat.x, -flat.z);
-      // stanna strax före stationen
-      const stopAt = pendingOpen ? 0.13 : 0.01;
-      const left = w.angleTo(UP);
-      if(left > stopAt){ rotateToward(w, Math.min(speed*1.4, left-stopAt)); moving = true; }
-      else { if(pendingOpen){ window.__showSheet(pendingOpen.item); } target = null; pendingOpen = null; }
-    }
-  }
-
-  // figuren
-  let d = facing - player.rotation.y; d = Math.atan2(Math.sin(d), Math.cos(d));
-  player.rotation.y += d * Math.min(1, dt*12);
-  walkT += moving ? dt*12 : 0;
-  const sw = moving ? Math.sin(walkT) : 0;
-  l1.rotation.x = sw*.6; l2.rotation.x = -sw*.6;
-  body.position.y = .62 + (moving ? Math.abs(Math.sin(walkT))*.05 : Math.sin(t*2)*.01);
-
-  // stationer: guppande skyltar + närhet
-  near = null; let best = 1e9;
-  for(const s of stations){
-    s.sign.position.y = s.baseY + Math.sin(t*2 + s.dir.x*5)*.12;
-    const wp = s.g.getWorldPosition(tmp);
-    const dist = wp.distanceTo(player.position);
-    if(dist < 2.6 && dist < best){ best = dist; near = s; }
-  }
-  if(near && started && !window.__uiOpen() && !window.__sheetOpen()){
-    const p = near.sign.getWorldPosition(new THREE.Vector3()).project(camera);
-    prompt.style.display = "block";
-    const pw = prompt.offsetWidth || 120;
-    prompt.style.left = Math.min(innerWidth - pw/2 - 8, Math.max(pw/2 + 8, (p.x+1)/2*innerWidth)) + "px";
-    prompt.style.top = ((1-p.y)/2*innerHeight - 30) + "px";
-    prompt.innerHTML = TOUCH ? `${near.item.n} · tryck` : `${near.item.n}<kbd>E</kbd>`;
-    prompt.onclick = () => window.__showSheet(near.item);
-  } else prompt.style.display = "none";
-
-  clouds.rotation.y += dt*.02; clouds.rotation.x += dt*.006;
-  if(!started) planet.rotateOnWorldAxis(UP, dt*.12);
-
-  renderer.render(scene, camera);
-  requestAnimationFrame(loop);
-}
-document.getElementById("loading").remove();
-loop();
-
-window.__start = () => {
-  started = true;
-  // tillbaka till spawn snyggt: nollställ fri rotation
-  planet.quaternion.setFromUnitVectors(spawn, UP);
-};
-</script>
-<script>
-// broar mellan UI-skriptet och 3D-modulen
-window.__TOOLS = TOOLS; window.__SPECIAL = SPECIAL;
-window.__showSheet = item => showSheet(item);
-window.__closeSheet = () => closeSheet();
-window.__closeAll = () => { closeSheet(); closeOverlay(); };
-window.__uiOpen = () => uiOpen;
-window.__sheetOpen = () => sheet.classList.contains("on");
-</script>
+<footer class="foot">
+  <div class="wrap foot-in">
+    <p>Verktygen på sidan är egna initiativ och inte system som införts av arbetsgivare. Inga projektdata visas.</p>
+    <p class="foot-y">© 2026 Victor <span class="ph">[EFTERNAMN]</span></p>
+  </div>
+</footer>
 </body>
 </html>
