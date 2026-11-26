@@ -1,305 +1,621 @@
 #!/usr/bin/env node
 /*
-  Generator för index.html.  Kör:  node tools/gen.js
-  - Läser tools/config.js (namn, e-post, LinkedIn, adress) och tools/index.src.html.
-  - Ritar alla inline-SVG (hero, Före/Efter, verktygsillustrationer) och mini-Gantten.
-  - Skriver ../index.html och ../img/favicon.svg.
-  Redigera alltid index.src.html, aldrig index.html direkt.
-
-  ACTS nedan styr både hallen och Gantten: s/e = planerad start/slut, as/ae = utfall.
-  NOW är veckan som visas utan JavaScript och där uppspelningen stannar.
+  Generator för hela webbplatsen.  Kör:  node tools/gen.js
+  Läser:
+    tools/config.js          namn, e-post, LinkedIn, ort, adress
+    tools/data/status.js     status per verktyg
+    tools/data/verktyg.js    all text om verktygen och case-sidorna
+    tools/data/media.js      skärmbilder och video per plats
+    tools/index.src.html     startsidans löptext (hero, arbetssätt, erfarenhet ...)
+  Skriver:
+    index.html, verktyg/<id>/index.html, 404.html, sitemap.xml, robots.txt, img/favicon.svg
+  Redigera aldrig de genererade filerna direkt.
 */
 'use strict';
 const fs = require('fs');
 const path = require('path');
 const config = require('./config');
+const STATUS = require('./data/status');
+const MEDIA = require('./data/media');
+const { kategorier, verktyg, moment, caseOrdning } = require('./data/verktyg');
+const R = require('./ritningar');
+const D = require('./demos');
 
 const ROOT = path.join(__dirname, '..');
-const f1 = (n) => (Math.round(n * 10) / 10).toString();
-const C = Math.cos(Math.PI / 6);
-function iso(S, ox = 0, oy = 0) {
-  const P = (x, y, z) => [(x - y) * C * S + ox, (x + y) * 0.5 * S - z * S + oy];
-  const pts = (arr) => arr.map((p) => P(...p).map(f1).join(',')).join(' ');
-  return { P, pts };
-}
-const esc = (t) => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+const esc = R.esc;
 const isSet = (v) => typeof v === 'string' && v.trim() !== '' && v.trim()[0] !== '[';
+const warn = (m) => console.warn('VARNING: ' + m);
+const byId = Object.fromEntries(verktyg.map((v) => [v.id, v]));
 
-/* ---------------- Tidplan ---------------- */
-const WEEKS = 24;
-const NOW = 18;
-const ACTS = [
-  { id: 1, name: 'Grundläggning', s: 1, e: 4 },
-  { id: 2, name: 'Pelare', s: 4, e: 8 },
-  { id: 3, name: 'Balkar', s: 6, e: 10 },
-  { id: 4, name: 'Takstolar', s: 9, e: 13 },
-  { id: 5, name: 'Takplåt', s: 12, e: 16 },
-  { id: 6, name: 'Väggar', s: 13, e: 18, as: 15, ae: 22 },
-  { id: 7, name: 'Portar och aggregat', s: 20, e: 23 },
-];
-ACTS.forEach((a) => { if (!a.as) a.as = a.s; if (!a.ae) a.ae = a.e; });
-
-// Samma logik som i js/main.js
-function elState(a, pw, aw, w) {
-  if (aw <= w) return w > a.ae ? 'd' : 'o';
-  if (pw <= w) return 'l';
-  return 'p';
+/* ---------------- Status ---------------- */
+const STATUSAR = {
+  drift: { t: 'I drift', k: 'done' },
+  utveckling: { t: 'Under utveckling', k: 'active' },
+  prototyp: { t: 'Prototyp', k: 'planned' },
+  pagang: { t: 'På gång', k: 'soon' },
+};
+function statusOf(id) {
+  const s = STATUS[id];
+  if (!STATUSAR[s]) throw new Error(`Okänd eller saknad status för "${id}" i tools/data/status.js: ${s}`);
+  return STATUSAR[s];
 }
-function rowState(a, w, anyLate) {
-  if (w > a.ae) return 'd';
-  if (anyLate || (w >= a.s && w < a.as) || w > a.e) return 'l';
-  if (w >= a.as) return 'o';
-  return 'p';
-}
+const badge = (id) => { const s = statusOf(id); return `<span class="st st-${s.k}"><i aria-hidden="true"></i>${s.t}</span>`; };
+verktyg.forEach((v) => statusOf(v.id));
 
-/* ---------------- Hero: generisk industrihall ---------------- */
-function heroSvg() {
-  const I = iso(5.4);
-  const rec = [];
-  const P = (x, y, z) => { const r = I.P(x, y, z); rec.push(r); return r; };
-  const pts = (arr) => arr.map((p) => P(...p).map(f1).join(',')).join(' ');
-  const L = 48, W = 24, H = 12, R = 15;
-  const ln = (p, q, k) => { const [x1, y1] = P(...p); const [x2, y2] = P(...q); return `<line class="${k}" x1="${f1(x1)}" y1="${f1(y1)}" x2="${f1(x2)}" y2="${f1(y2)}"/>`; };
-  const pg = (arr, k) => `<polygon${k ? ` class="${k}"` : ''} points="${pts(arr)}"/>`;
-  const pl = (arr, k) => `<polyline class="${k}" points="${pts(arr)}"/>`;
-  const by = {};
-  const add = (a, shape) => (by[a] = by[a] || []).push(shape);
+/* ---------------- Personuppgifter ---------------- */
+const P = config.person;
+const fullName = P.fornamn + (isSet(P.efternamn) ? ' ' + P.efternamn : '');
+const epostSet = isSet(P.epost) && /@/.test(P.epost);
+const liSet = isSet(P.linkedin) && /^https:\/\//.test(P.linkedin);
+const hasContact = epostSet || liSet; // styr menyvalet Kontakt och kontaktdelen
+const URL = config.url.endsWith('/') ? config.url : config.url + '/';
+const URL_PATH = new globalThis.URL(URL).pathname;
 
-  for (let i = 0; i < 4; i++) add(1, pg([[12 * i, 0, 0], [12 * i + 12, 0, 0], [12 * i + 12, W, 0], [12 * i, W, 0]], 'k-slab'));
-  // Väggar i montageordning: bakre långsidan först, sedan gaveln (som syns bäst och blir försenad)
-  for (let i = 3; i >= 0; i--) add(6, pg([[12 * i, 0, 0], [12 * i + 12, 0, 0], [12 * i + 12, 0, H], [12 * i, 0, H]], 'k-wall'));
-  add(6, pg([[0, 0, 0], [0, 12, 0], [0, 12, R], [0, 0, H]], 'k-wall'));
-  add(6, pg([[0, 12, 0], [0, W, 0], [0, W, H], [0, 12, R]], 'k-wall'));
-  [1, 3].forEach((i) => {
-    const x0 = 12 * i + 3;
-    add(7, `<g class="k-door">${pg([[x0, 0, 0], [x0 + 6, 0, 0], [x0 + 6, 0, 6.5], [x0, 0, 6.5]])}${[1.6, 3.2, 4.8].map((z) => ln([x0, 0, z], [x0 + 6, 0, z], 'k-in')).join('')}</g>`);
-  });
-  for (let x = 0; x <= L; x += 12) for (const y of [0, 12, 24]) add(2, ln([x, y, 0], [x, y, y === 12 ? R : H], 'k-col'));
-  for (let i = 0; i < 4; i++) for (const y of [0, 24, 12]) add(3, ln([12 * i, y, y === 12 ? R : H], [12 * i + 12, y, y === 12 ? R : H], 'k-beam'));
-  for (let x = 0; x <= L; x += 12) add(4, pl([[x, 0, H], [x, 12, R], [x, W, H]], 'k-raft'));
-  for (let i = 0; i < 4; i++) {
-    add(5, pg([[12 * i, 0, H], [12 * i + 12, 0, H], [12 * i + 12, 12, R], [12 * i, 12, R]], 'k-roof'));
-    add(5, pg([[12 * i, 12, R], [12 * i + 12, 12, R], [12 * i + 12, W, H], [12 * i, W, H]], 'k-roof'));
+/* ---------------- Media ---------------- */
+function dims(file) {
+  const b = fs.readFileSync(file);
+  if (b.slice(1, 4).toString() === 'PNG') return [b.readUInt32BE(16), b.readUInt32BE(20)];
+  if (b[0] === 0xFF && b[1] === 0xD8) {
+    let i = 2;
+    while (i < b.length) {
+      if (b[i] !== 0xFF) { i++; continue; }
+      const m = b[i + 1];
+      if (m >= 0xC0 && m <= 0xCF && ![0xC4, 0xC8, 0xCC].includes(m)) return [b.readUInt16BE(i + 7), b.readUInt16BE(i + 5)];
+      i += 2 + b.readUInt16BE(i + 2);
+    }
   }
-  const unit = (x0, y0) => {
-    const zr = (y) => R - (y - 12) * (3 / 12);
-    const z0 = zr(y0 + 4) + 0.2, z1 = z0 + 2.2, w = 5, d = 3.5;
-    return `<g class="k-unit">${pg([[x0, y0 + d, z0], [x0 + w, y0 + d, z0], [x0 + w, y0 + d, z1], [x0, y0 + d, z1]])}${pg([[x0 + w, y0, z0], [x0 + w, y0 + d, z0], [x0 + w, y0 + d, z1], [x0 + w, y0, z1]])}${pg([[x0, y0, z1], [x0 + w, y0, z1], [x0 + w, y0 + d, z1], [x0, y0 + d, z1]])}</g>`;
-  };
-  add(7, unit(9, 14));
-  add(7, unit(31, 14));
-
-  // Planerad och faktisk montagevecka per del
-  const tagged = {};
-  const late = {};
-  for (const a of ACTS) {
-    const list = by[a.id];
-    const ps = a.e - a.s + 1, as = a.ae - a.as + 1;
-    tagged[a.id] = list.map((shape, i) => {
-      const pw = a.s + Math.floor((i * ps) / list.length);
-      const aw = a.as + Math.floor((i * as) / list.length);
-      const st = elState(a, pw, aw, NOW);
-      if (st === 'l') late[a.id] = true;
-      return shape.replace(/^<(\w+) class="([^"]*)"/, (m, tag, k) => `<${tag} class="el ${st} ${k}" data-a="${a.id}" data-pw="${pw}" data-w="${aw}"`);
-    });
+  if (b.slice(0, 4).toString() === 'RIFF' && b.slice(8, 12).toString() === 'WEBP') {
+    const t = b.slice(12, 16).toString();
+    if (t === 'VP8X') return [1 + b.readUIntLE(24, 3), 1 + b.readUIntLE(27, 3)];
+    if (t === 'VP8 ') return [b.readUInt16LE(26) & 0x3FFF, b.readUInt16LE(28) & 0x3FFF];
+    if (t === 'VP8L') { const n = b.readUInt32LE(21); return [1 + (n & 0x3FFF), 1 + ((n >> 14) & 0x3FFF)]; }
   }
-  const t7 = tagged[7];
-  const seq = [...tagged[1], ...tagged[6], t7[0], t7[1], ...tagged[2], ...tagged[3], ...tagged[4], ...tagged[5], t7[2], t7[3]];
-
-  const grid = [];
-  for (let x = 0; x <= L; x += 12) grid.push(ln([x, -5, 0], [x, W + 7, 0], 'ax'));
-  for (const y of [0, 12, 24]) grid.push(ln([-5, y, 0], [L + 7, y, 0], 'ax'));
-  const bub = [];
-  for (let i = 0; i < 5; i++) { const [x, y] = P(12 * i, W + 10, 0); bub.push(`<circle class="bub" cx="${f1(x)}" cy="${f1(y)}" r="7.5"/><text class="bt" x="${f1(x)}" y="${f1(y + 3.2)}">${i + 1}</text>`); }
-  ['A', 'B', 'C'].forEach((ch, i) => { const [x, y] = P(L + 10, 12 * i, 0); bub.push(`<circle class="bub" cx="${f1(x)}" cy="${f1(y)}" r="7.5"/><text class="bt" x="${f1(x)}" y="${f1(y + 3.2)}">${ch}</text>`); });
-  const d1 = P(0, W + 16, 0), d2 = P(L, W + 16, 0);
-  const dim = `<g class="dim"><line x1="${f1(d1[0])}" y1="${f1(d1[1])}" x2="${f1(d2[0])}" y2="${f1(d2[1])}"/>${[d1, d2].map((d) => `<line x1="${f1(d[0] - 3)}" y1="${f1(d[1] + 3)}" x2="${f1(d[0] + 3)}" y2="${f1(d[1] - 3)}"/>`).join('')}</g>`;
-
-  const xs = rec.map((r) => r[0]), ys = rec.map((r) => r[1]);
-  const minX = Math.floor(Math.min(...xs)) - 12, maxX = Math.ceil(Math.max(...xs)) + 12;
-  const minY = Math.floor(Math.min(...ys)) - 10, maxY = Math.ceil(Math.max(...ys)) + 12;
-  const svg = `<svg class="bldg" id="bldg" viewBox="${minX} ${minY} ${maxX - minX} ${maxY - minY}" role="img" aria-labelledby="bldg-t bldg-d">
-<title id="bldg-t">Axonometrisk ritning av en generisk industrihall</title>
-<desc id="bldg-d">Hallens delar får statusfärg efter tidplanens vecka: planerad, pågår, klar eller försenad. I vecka ${NOW} ligger väggarna efter plan.</desc>
-<g class="grid" aria-hidden="true">${grid.join('')}</g>
-<g class="parts">${seq.join('\n')}</g>
-<g aria-hidden="true">${bub.join('')}${dim}</g>
-</svg>`;
-  return { svg, late };
+  return null;
 }
-
-const N = (n, one, many) => n + ' ' + (n === 1 ? one : many);
-function summary(c) {
-  const parts = [];
-  if (c.d) parts.push(N(c.d, 'klar', 'klara'));
-  if (c.o) parts.push(N(c.o, 'pågår', 'pågår'));
-  if (c.l) parts.push(N(c.l, 'försenad', 'försenade'));
-  if (c.p) parts.push(N(c.p, 'planerad', 'planerade'));
-  return parts.join(', ');
-}
-
-function gantt(late) {
-  const ticks = [1, 4, 8, 12, 16, 20, 24].map((w) => `<span${[4, 12, 20].includes(w) ? ' class="t-minor"' : ''} style="--t:${w}">V${String(w).padStart(2, '0')}</span>`).join('');
-  const c = { d: 0, o: 0, l: 0, p: 0 };
-  const rows = ACTS.map((a) => {
-    const st = rowState(a, NOW, !!late[a.id]);
-    c[st]++;
-    const dw = Math.max(0, Math.min(NOW - a.as + 1, a.ae - a.as + 1));
-    const tail = a.ae > a.e ? '<span class="g-late"></span>' : '';
-    const hasLate = a.ae > a.e && NOW > a.e ? ' has-late' : '';
-    return `<li class="g-row is-${st}${hasLate}" data-s="${a.s}" data-e="${a.e}" data-as="${a.as}" data-ae="${a.ae}" style="--s:${a.s};--e:${a.e};--as:${a.as};--ae:${a.ae};--dw:${dw}"><span class="g-lab">${a.name}</span><span class="g-track"><span class="g-plan"></span><span class="g-prog"></span>${tail}</span></li>`;
-  }).join('\n');
-  return { ticks, rows, counts: c, valuetext: `Vecka ${NOW} av ${WEEKS}, nuläge: ${summary(c)}` };
-}
-
-/* ---------------- Verktygsillustrationer ---------------- */
-function artKoppling() {
-  const { P, pts } = iso(5.2, 92, 92);
-  const st = ['d', 'd', 'o', 'p', 'p'];
-  const box = (x0, y0, w, d, h, k) => `<g class="b-${k}"><polygon points="${pts([[x0, y0 + d, 0], [x0 + w, y0 + d, 0], [x0 + w, y0 + d, h], [x0, y0 + d, h]])}"/><polygon points="${pts([[x0 + w, y0, 0], [x0 + w, y0 + d, 0], [x0 + w, y0 + d, h], [x0 + w, y0, h]])}"/><polygon points="${pts([[x0, y0, h], [x0 + w, y0, h], [x0 + w, y0 + d, h], [x0, y0 + d, h]])}"/></g>`;
-  const parts = st.map((k, i) => box(i * 6, 0, 6, 12, 9, k));
-  const slab = `<polygon class="ln-fill" points="${pts([[-3, -3, 0], [33, -3, 0], [33, 15, 0], [-3, 15, 0]])}"/>`;
-  const gx = 236, gy = 56, rw = 136, rh = 22;
-  const g = [];
-  g.push(`<path class="ln" pathLength="1" d="M${gx} ${gy - 14} H${gx + rw}"/>`);
-  const bars = [[0, 0.28, 'd'], [0.18, 0.46, 'd'], [0.36, 0.7, 'o'], [0.6, 0.86, 'p'], [0.78, 1, 'p']];
-  bars.forEach(([a, b, k], i) => g.push(`<rect class="g-${k}" x="${f1(gx + a * rw)}" y="${gy + i * rh}" width="${f1((b - a) * rw)}" height="10"/>`));
-  const nx = gx + 0.55 * rw;
-  g.push(`<line class="now" x1="${f1(nx)}" y1="${gy - 22}" x2="${f1(nx)}" y2="${gy + 5 * rh}"/><text class="mono" x="${f1(nx + 5)}" y="${gy - 20}">V 14</text>`);
-  const [lx, ly] = P(15, 6, 9);
-  const link = `<path class="link ln" pathLength="1" d="M${gx - 4} ${gy + 2 * rh + 5} C ${gx - 40} ${gy + 2 * rh + 5}, ${f1(lx + 30)} ${f1(ly)}, ${f1(lx)} ${f1(ly)}"/><circle class="node" cx="${f1(lx)}" cy="${f1(ly)}" r="3.5"/>`;
-  return `<svg viewBox="0 0 400 240" aria-hidden="true" focusable="false"><g>${slab}${parts.join('')}</g>${link}${g.join('')}<text class="mono s" x="24" y="222">POWERPROJECT · P6 · MODELL</text></svg>`;
-}
-
-function artTC() {
-  const { P, pts } = iso(4.3, 176, 52);
-  const d = (arr) => 'M' + arr.map((p) => P(...p).map(f1).join(' ')).join(' L') + ' Z';
-  const o = [];
-  o.push(`<polygon class="ln-fill" points="${pts([[0, 0, 0], [44, 0, 0], [44, 30, 0], [0, 30, 0]])}"/>`);
-  o.push(`<polygon class="sheet" points="${pts([[3, 3, 0], [31, 3, 0], [31, 25, 0], [3, 25, 0]])}"/>`);
-  for (let k = 1; k < 5; k++) { const a = P(6, 3 + k * 4, 0), b = P(22, 3 + k * 4, 0); o.push(`<line class="sheet-l" x1="${f1(a[0])}" y1="${f1(a[1])}" x2="${f1(b[0])}" y2="${f1(b[1])}"/>`); }
-  o.push(`<polygon class="sheet-l" points="${pts([[23, 19, 0], [31, 19, 0], [31, 25, 0], [23, 25, 0]])}"/>`);
-  [[3, 25], [31, 25]].forEach(([x, y]) => { const [a, b] = P(x, y, 0); o.push(`<g class="calx"><circle cx="${f1(a)}" cy="${f1(b)}" r="5"/><line x1="${f1(a - 9)}" y1="${f1(b)}" x2="${f1(a + 9)}" y2="${f1(b)}"/><line x1="${f1(a)}" y1="${f1(b - 9)}" x2="${f1(a)}" y2="${f1(b + 9)}"/></g>`); });
-  const poly = [[10, 17, 0], [26, 16, 0], [40, 21, 0], [32, 28, 0], [12, 27, 0]];
-  o.push(`<path class="qty ln" pathLength="1" d="${d(poly)}"/>`);
-  poly.forEach((p) => { const [x, y] = P(...p); o.push(`<rect class="vtx" x="${f1(x - 2.5)}" y="${f1(y - 2.5)}" width="5" height="5"/>`); });
-  const box = (x0, y0, w, dd, h) => `<g class="b-m"><polygon points="${pts([[x0, y0 + dd, 0], [x0 + w, y0 + dd, 0], [x0 + w, y0 + dd, h], [x0, y0 + dd, h]])}"/><polygon points="${pts([[x0 + w, y0, 0], [x0 + w, y0 + dd, 0], [x0 + w, y0 + dd, h], [x0 + w, y0, h]])}"/><polygon points="${pts([[x0, y0, h], [x0 + w, y0, h], [x0 + w, y0 + dd, h], [x0, y0 + dd, h]])}"/></g>`;
-  o.push(box(6, 5, 14, 8, 6));
-  o.push(box(26, 5, 10, 7, 3.5));
-  const pin = (p, k) => { const [x, y] = P(...p); return `<path class="pin pin-${k}" d="M${f1(x)} ${f1(y)} c-2 -6 -8 -10 -8 -16 a8 8 0 0 1 16 0 c0 6 -6 10 -8 16 z"/><circle class="pin-c" cx="${f1(x)}" cy="${f1(y - 16)}" r="2.6"/>`; };
-  o.push(pin([13, 9, 6], 'o'), pin([31, 8.5, 3.5], 'l'), pin([20, 23, 0], 'd'));
-  return `<svg viewBox="0 0 400 240" aria-hidden="true" focusable="false">${o.join('')}<text class="mono s" x="24" y="228">SWEREF 99 · PDF · FOTO · MÄNGD</text></svg>`;
-}
-
-function favicon() {
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="8" fill="#F5F3EE"/><rect x="7" y="7" width="50" height="50" fill="none" stroke="#16191D" stroke-width="4"/><path d="M19 18 L32 47 L45 18" fill="none" stroke="#16191D" stroke-width="6" stroke-linejoin="miter"/><path d="M3 3 H15 M3 3 V15" stroke="#E8551E" stroke-width="5"/></svg>`;
-}
-function elevation(phase) {
-  const gy = 300, x0 = 60, bay = 104, n = 5, eave = 132, ridge = 112;
-  const xs = Array.from({ length: n + 1 }, (_, i) => x0 + i * bay);
-  const o = [];
-  // Mark
-  o.push(`<line class="gnd" x1="20" y1="${gy}" x2="620" y2="${gy}"/>`);
-  for (let x = 24; x < 620; x += 14) o.push(`<line class="hatch" x1="${x}" y1="${gy + 2}" x2="${x - 8}" y2="${gy + 10}"/>`);
-  // Axlar
-  xs.forEach((x, i) => { o.push(`<line class="ax" x1="${x}" y1="${gy + 8}" x2="${x}" y2="${gy + 26}"/><circle class="bub" cx="${x}" cy="${gy + 36}" r="9"/><text class="bt" x="${x}" y="${gy + 40}">${i + 1}</text>`); });
-  if (phase === 'early') {
-    // Plintar klara
-    xs.forEach((x) => o.push(`<rect class="st-d" x="${x - 9}" y="${gy - 4}" width="18" height="8"/>`));
-    // Planerad stomme
-    o.push(`<polyline class="st-p" points="${x0},${gy} ${x0},${eave} ${xs[n]},${eave} ${xs[n]},${gy}"/>`);
-    xs.slice(2).forEach((x) => o.push(`<line class="st-p" x1="${x}" y1="${gy}" x2="${x}" y2="${eave}"/>`));
-    // Resta pelare och en balk
-    xs.slice(0, 3).forEach((x) => o.push(`<line class="st-o col" x1="${x}" y1="${gy - 4}" x2="${x}" y2="${eave}"/>`));
-    o.push(`<line class="st-o beam" x1="${xs[0]}" y1="${eave}" x2="${xs[1]}" y2="${eave}"/>`);
-    // Mobilkran
-    const cx = 470, cy = gy - 4;
-    o.push(`<g class="eq"><rect x="${cx - 46}" y="${cy - 16}" width="92" height="16" rx="3"/><circle cx="${cx - 34}" cy="${cy - 2}" r="5"/><circle cx="${cx + 34}" cy="${cy - 2}" r="5"/><circle cx="${cx}" cy="${cy - 2}" r="5"/><rect x="${cx - 20}" y="${cy - 36}" width="40" height="20"/><line x1="${cx - 8}" y1="${cy - 30}" x2="${xs[3] - 6}" y2="62"/><line x1="${cx + 6}" y1="${cy - 30}" x2="${xs[3] - 6}" y2="62"/><line x1="${xs[3] - 6}" y1="62" x2="${xs[3] - 6}" y2="170"/><rect x="${xs[3] - 10}" y="170" width="8" height="8"/><line class="load" x1="${xs[3] - 2}" y1="186" x2="${xs[3] - 2}" y2="268"/></g>`);
-    // Upplag
-    o.push(`<g class="eq">${[0, 1, 2].map((k) => `<rect x="${xs[1] + 26}" y="${gy - 8 - k * 7}" width="54" height="6"/>`).join('')}</g>`);
-    o.push(`<g class="tag"><rect x="20" y="20" width="122" height="28"/><text x="32" y="39">FÖRE · V 06</text></g>`);
+const usedSlots = new Set();
+// Returnerar { html, mode } eller null om platsen är tom
+function media(slot, base, opts = {}) {
+  usedSlots.add(slot);
+  if (!(slot in MEDIA)) warn(`platsen "${slot}" saknas i tools/data/media.js (visas som illustration)`);
+  const m = MEDIA[slot];
+  if (!m) return null;
+  const abs = path.join(ROOT, m.fil || '');
+  if (!m.fil || !fs.existsSync(abs)) { warn(`${slot}: filen ${m.fil} finns inte, illustrationen visas`); return null; }
+  if (!m.alt) warn(`${slot}: alt-text saknas`);
+  const isVid = /\.(mp4|webm)$/i.test(m.fil);
+  let w = m.bredd, h = m.hojd;
+  const dimSrc = isVid ? m.poster && path.join(ROOT, m.poster) : abs;
+  if ((!w || !h) && dimSrc && fs.existsSync(dimSrc)) { const d = dims(dimSrc); if (d) [w, h] = d; }
+  if (!w || !h) { warn(`${slot}: ange bredd och hojd i media.js`); w = 1600; h = 1000; }
+  const src = base + m.fil;
+  const loading = opts.eager ? 'eager' : 'lazy';
+  let html;
+  if (isVid) {
+    if (!m.poster) warn(`${slot}: video utan poster`);
+    html = `<video class="m-vid" width="${w}" height="${h}"${m.poster ? ` poster="${base + m.poster}"` : ''} muted playsinline loop preload="none" controls aria-label="${esc(m.alt || '')}"><source src="${src}" type="video/${/webm$/i.test(m.fil) ? 'webm' : 'mp4'}"></video>`;
   } else {
-    // Färdig fasad
-    o.push(`<polygon class="st-d roofband" points="${x0 - 6},${eave} ${x0 + 30},${ridge} ${xs[n] - 30},${ridge} ${xs[n] + 6},${eave}"/>`);
-    o.push(`<rect class="st-d" x="${x0}" y="${eave}" width="${n * bay}" height="${gy - eave}"/>`);
-    for (let x = x0 + 13; x < xs[n]; x += 13) o.push(`<line class="rib" x1="${x}" y1="${eave + 4}" x2="${x}" y2="${gy}"/>`);
-    // Fönsterband
-    o.push(`<rect class="win" x="${x0 + 8}" y="${eave + 14}" width="${n * bay - 16}" height="16"/>`);
-    // Portar
-    [1, 3].forEach((i) => { const x = xs[i] + 22; o.push(`<g class="door"><rect x="${x}" y="${gy - 96}" width="60" height="96"/>${[1, 2, 3, 4, 5].map((k) => `<line x1="${x}" y1="${gy - 96 + k * 16}" x2="${x + 60}" y2="${gy - 96 + k * 16}"/>`).join('')}</g>`); });
-    o.push(`<rect class="st-d" x="${xs[4] + 30}" y="${gy - 60}" width="26" height="60"/>`);
-    // Aggregat på tak
-    o.push(`<rect class="st-d" x="${xs[1] + 10}" y="${ridge - 18}" width="50" height="18"/><rect class="st-d" x="${xs[3] + 10}" y="${ridge - 18}" width="50" height="18"/>`);
-    o.push(`<g class="tag"><rect x="490" y="20" width="130" height="28"/><text x="502" y="39">EFTER · V 22</text></g>`);
+    html = `<img class="m-img" src="${src}" alt="${esc(m.alt || '')}" width="${w}" height="${h}" loading="${loading}" decoding="async">`;
   }
-  return `<svg viewBox="0 0 640 360" aria-hidden="true" focusable="false">${o.join('')}</svg>`;
+  const mode = m.kalla === 'illustration' ? 'Illustration' : isVid ? 'Skärminspelning · demoprojekt' : 'Skärmbild · demoprojekt';
+  return { html, mode, ratio: `${w} / ${h}` };
 }
 
-function artBinder() {
-  const o = [];
-  // Hög med ark
-  for (let i = 7; i >= 0; i--) {
-    const x = 28 + i * 5, y = 44 + i * 6;
-    o.push(`<g class="paper"><rect x="${x}" y="${y}" width="88" height="118"/><rect class="tb" x="${x + 54}" y="${y + 96}" width="30" height="18"/><line x1="${x + 10}" y1="${y + 18}" x2="${x + 60}" y2="${y + 18}"/><line x1="${x + 10}" y1="${y + 30}" x2="${x + 44}" y2="${y + 30}"/></g>`);
-  }
-  o.push(`<text class="mono s" x="28" y="214">CA 240 PDF</text>`);
-  // Sortering
-  const fromX = 150, fromY = 128;
-  const tgt = [[262, 74], [262, 128], [262, 182]];
-  tgt.forEach(([x, y]) => o.push(`<path class="link ln" pathLength="1" d="M${fromX} ${fromY} C ${fromX + 50} ${fromY}, ${x - 60} ${y}, ${x - 6} ${y}"/><path class="arrow" d="M${x - 12} ${y - 4} L${x - 4} ${y} L${x - 12} ${y + 4}"/>`));
-  o.push(`<circle class="node" cx="${fromX}" cy="${fromY}" r="5"/>`);
-  // Pärmar
-  const labs = ['A', 'B', 'C'];
-  const kk = ['d', 'd', 'o'];
-  tgt.forEach(([x, y], i) => {
-    const bx = x + 2, by = y - 22;
-    o.push(`<g class="binder"><rect x="${bx}" y="${by}" width="112" height="44"/><rect class="spine sp-${kk[i]}" x="${bx}" y="${by}" width="16" height="44"/><circle cx="${bx + 8}" cy="${by + 22}" r="3.2"/><text class="mono" x="${bx + 26}" y="${by + 19}">OMRÅDE ${labs[i]}</text><line x1="${bx + 26}" y1="${by + 30}" x2="${bx + 96}" y2="${by + 30}"/></g>`);
-  });
-  return `<svg viewBox="0 0 400 240" aria-hidden="true" focusable="false">${o.join('')}<text class="mono s" x="264" y="226">PÄRM PER OMRÅDE</text></svg>`;
+/* ---------------- Komponenter ---------------- */
+// Ritningsram: titelblock med tre celler, passmärken, nät inuti
+function frame({ fig, title, mode, body, cls = '', caption = '', attrs = '', bodyCls = '' }) {
+  return `<figure class="frame ${cls}"${attrs}>
+  <div class="frame-tb" aria-hidden="true"><span>Fig. ${fig}</span><span class="frame-ti">${esc(title)}</span><span class="frame-mo">${esc(mode)}</span></div>
+  <div class="frame-body ${bodyCls}">${body}</div>${caption ? `\n  <figcaption>${caption}</figcaption>` : ''}
+</figure>`;
+}
+const tags = (list, label = 'Teknik och funktioner') => `<ul class="tags" aria-label="${label}">${list.map((t) => `<li>${esc(t)}</li>`).join('')}</ul>`;
+const arrow = '<span class="arr" aria-hidden="true">→</span>';
+
+function head({ base, title, desc, canonical, ogImageAlt, jsonld }) {
+  return `<!DOCTYPE html>
+<!-- Genererad av tools/gen.js. Redigera tools/ och kör: node tools/gen.js -->
+<html lang="sv">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>${esc(title)}</title>
+<meta name="description" content="${esc(desc)}">
+<link rel="canonical" href="${canonical}">
+<meta name="color-scheme" content="light dark">
+<meta name="theme-color" content="#F6F5F1" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0C0E11" media="(prefers-color-scheme: dark)">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="sv_SE">
+<meta property="og:site_name" content="${esc(fullName)}">
+<meta property="og:url" content="${canonical}">
+<meta property="og:title" content="${esc(title)}">
+<meta property="og:description" content="${esc(desc)}">
+<meta property="og:image" content="${URL}img/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="${esc(ogImageAlt)}">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="${base}img/favicon.svg" type="image/svg+xml">
+<link rel="preload" href="${base}fonts/geist-latin-var.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="${base}css/style.css">
+<script>(function(d){d.classList.add('js');if(!matchMedia('(prefers-reduced-motion: reduce)').matches&&d.dataset.page==='start'){d.classList.add('intro');setTimeout(function(){d.classList.remove('intro');},3000);}})(document.documentElement);</script>
+<script src="${base}js/main.js" defer></script>
+<script type="application/ld+json">${JSON.stringify(jsonld)}</script>
+</head>`;
 }
 
+function header(base, home) {
+  const h = home ? '' : base;
+  return `<a class="skip" href="#innehall">Hoppa till innehåll</a>
+<header class="top">
+  <div class="wrap top-in">
+    <a class="brand" href="${home ? '#top' : base}"${home ? '' : ` aria-label="${esc(fullName)}, till startsidan"`}>
+      <svg class="brand-mark" viewBox="0 0 64 64" aria-hidden="true" focusable="false"><path d="M18 17 L32 47 L46 17" fill="none" stroke="currentColor" stroke-width="6"/><path class="bm-c" d="M6 6 H18 M6 6 V18 M58 58 H46 M58 58 V46" stroke-width="4"/></svg>
+      <span class="brand-t">${esc(fullName)}</span>
+    </a>
+    <nav aria-label="Huvudmeny">
+      <ul class="nav">
+        <li><a href="${h}#verktyg"${home ? '' : ' aria-current="true"'}>Verktyg</a></li>
+        <li><a href="${h}#arbetssatt">Arbetssätt</a></li>
+        <li><a href="${h}#erfarenhet">Erfarenhet</a></li>
+${hasContact ? `        <li><a href="${h}#kontakt">Kontakt</a></li>
+` : ''}      </ul>
+    </nav>
+  </div>
+</header>`;
+}
 
-/* ---------------- Sätt ihop ---------------- */
-function build() {
-  const { person, url } = config;
-  const hero = heroSvg();
-  const g = gantt(hero.late);
-  const nameText = isSet(person.efternamn) ? person.efternamn : '[EFTERNAMN]';
-  const nameHtml = isSet(person.efternamn) ? esc(person.efternamn) : '<span class="ph">[EFTERNAMN]</span>';
-  const epost = isSet(person.epost)
-    ? `<a class="c-v" href="mailto:${esc(person.epost)}">${esc(person.epost)}</a>`
-    : '<span class="c-v"><span class="ph">[E-POST]</span></span>';
-  const li = isSet(person.linkedin) && /^https:\/\//.test(person.linkedin)
-    ? `<a class="c-v" href="${esc(person.linkedin)}">${esc(person.linkedin.replace(/^https:\/\/(www\.)?/, '').replace(/\/$/, ''))}</a>`
-    : '<span class="c-v"><span class="ph">[LINKEDIN]</span></span>';
-  const rep = {
-    URL: esc(url),
-    NAME_TEXT: esc(nameText),
-    NAME: nameHtml,
-    EPOST: epost,
-    LINKEDIN: li,
-    YEAR: String(new Date().getFullYear()),
-    NOW: String(NOW),
-    NOW2: String(NOW).padStart(2, '0'),
-    WEEKS: String(WEEKS),
-    HERO: hero.svg,
-    GANTT_TICKS: g.ticks,
-    GANTT_ROWS: g.rows,
+function footer() {
+  return `<footer class="foot">
+  <div class="wrap foot-in">
+    <p>Verktygen är egna initiativ och inte system som införts av en arbetsgivare. Ritningar och demos använder generiska data, inga projektdata.</p>
+    <p class="foot-y">© ${new Date().getFullYear()} ${esc(fullName)}</p>
+  </div>
+</footer>
+</body>
+</html>
+`;
+}
+
+/* ---------------- Startsidan: genererade block ---------------- */
+function heroBlock() {
+  const hero = R.hall('bldg');
+  const g = R.gantt(hero.late);
+  return {
+    HERO: hero.svg, GANTT_TICKS: g.ticks, GANTT_ROWS: g.rows,
     C_D: String(g.counts.d), C_O: String(g.counts.o), C_L: String(g.counts.l), C_P: String(g.counts.p),
-    VALUETEXT: g.valuetext,
-    FORE: elevation('early'),
-    EFTER: elevation('late'),
-    ART_KOPPLING: artKoppling(),
-    ART_TC: artTC(),
-    ART_BINDER: artBinder(),
+    VALUETEXT: g.valuetext, NOW: String(R.NOW), NOW2: String(R.NOW).padStart(2, '0'), WEEKS: String(R.WEEKS),
+  };
+}
+
+function flagship() {
+  const id = 'tidplan-i-modellen';
+  const demo = DEMO.flytta;
+  const tabs = [
+    ['flytta', 'Flytta en aktivitet', () => demo.html(), demo.cap, 'Demo · generiska data'],
+    ['montage', 'Montageordning', () => R.flagMontage(), 'Ordningen som delarna monteras i, synlig i modellen.', 'Illustration'],
+    ['lagesbild', 'Lägesbild till Trimble Connect', () => R.flagLagesbild(), 'Lägesbilder med skyltar i 3D. Skyltar och etiketter exporteras som IFC i SWEREF 99 till Trimble Connect.', 'Illustration'],
+  ];
+  const btns = tabs.map(([k, t], i) => `<button type="button" class="tab" role="tab" id="ft-${k}" aria-controls="fp-${k}" aria-selected="${i === 0}"${i ? ' tabindex="-1"' : ''}><span class="tab-n">0${i + 1}</span>${t}</button>`).join('');
+  const panels = tabs.map(([k, t, body, cap, mode], i) => {
+    const m = media('start/flaggskepp-' + k, '', {});
+    return `<div class="tp" id="fp-${k}" role="tabpanel" aria-labelledby="ft-${k}"${i ? ' data-off' : ''}>${frame({ fig: '2.' + (i + 1), title: t, mode: m ? m.mode : mode, body: m ? m.html : body(), cls: 'frame-stage' + (k === 'flytta' && !m ? ' frame-demo' : ''), caption: esc(cap) })}</div>`;
+  }).join('');
+  return `<section class="scene flag" id="tidplan" aria-labelledby="h-flag">
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="over">Tidplan i modellen ${badge(id)}</p>
+      <h2 id="h-flag">Modellen visar veckan.</h2>
+      <p class="lead">Ett tillägg till SketchUp som läser tidplanen från Powerproject eller Primavera P6. Flytta en aktivitet och se vilka delar som blir sena.</p>
+    </div>
+    <div class="tabs" data-tabs>
+      <div class="tablist js-only" role="tablist" aria-label="Funktioner i Tidplan i modellen">${btns}</div>
+      <div class="tabpanels" data-vt="${id}">${panels}</div>
+    </div>
+    <p class="more-link"><a class="tlink" href="verktyg/${id}/">Så fungerar Tidplan i modellen ${arrow}</a></p>
+  </div>
+</section>`;
+}
+
+function cards() {
+  const art = { 'trimble-connect': R.cardTC(), 'production-cockpit': R.cardCockpit(), binderbuilder: R.cardBinder() };
+  const list = ['trimble-connect', 'production-cockpit', 'binderbuilder', 'fore-efter'];
+  const nr = (id) => String(verktyg.findIndex((v) => v.id === id) + 1).padStart(2, '0');
+  return list.map((id, i) => {
+    const v = byId[id];
+    const isCase = !!v.case;
+    let body, mode;
+    if (id === 'fore-efter') {
+      body = `<div class="ba" id="ba" style="--pos:50%">
+            <div class="ba-layer ba-after">${R.elevation('late')}</div>
+            <div class="ba-layer ba-before">${R.elevation('early')}</div>
+            <input class="ba-range" type="range" id="ba-range" min="0" max="100" step="1" value="50" aria-label="Jämför före och efter: vecka 6 mot vecka 22" aria-valuetext="Hälften före, hälften efter">
+            <span class="ba-line" aria-hidden="true"><span class="ba-knob"><svg viewBox="0 0 24 24" focusable="false"><path d="M9 7 L4 12 L9 17 M15 7 L20 12 L15 17" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/></svg></span></span>
+          </div>
+          <p class="ba-hint" aria-hidden="true"><span>Före · V 06</span><span>Dra i skiljelinjen</span><span>Efter · V 22</span></p>`;
+      mode = 'Demo · generiska data';
+    } else {
+      const m = media('start/kort-' + id, '');
+      body = m ? m.html : art[id];
+      mode = m ? m.mode : 'Illustration';
+    }
+    const vt = isCase ? ` data-vt="${id}"` : '';
+    return `<article class="card${isCase ? ' card-link' : ''} reveal" aria-labelledby="c-${id}">
+      ${frame({ fig: 3 + i, title: `Verktyg ${nr(id)}`, mode, body, cls: id === 'fore-efter' ? 'frame-ba' : '', attrs: vt })}
+      <div class="card-body">
+        <p class="card-meta">${badge(id)}${v.typ ? `<span class="card-typ">${esc(v.typ)}</span>` : ''}</p>
+        <h3 id="c-${id}">${esc(v.namn)}</h3>
+        <p class="card-p">${esc(v.kort.problem)}</p>
+        <p class="card-e">${esc(v.kort.effekt)}</p>
+        ${tags(v.kort.taggar, 'Funktioner')}
+        ${isCase ? `<p class="card-more"><a class="tlink" href="verktyg/${id}/">Se hur det fungerar<span class="vh"> – ${esc(v.namn)}</span> ${arrow}</a></p>` : '<p class="card-note">Bilderna i demon är egenritade: en tidig och en sen byggfas.</p>'}
+      </div>
+    </article>`;
+  }).join('\n');
+}
+
+function register() {
+  const chips = [['alla', 'Alla'], ...Object.entries(kategorier)].map(([k, t], i) => `<li><button type="button" class="chip" data-filter="${k}" aria-pressed="${i === 0}">${t}<span class="chip-n">${k === 'alla' ? verktyg.length : verktyg.filter((v) => v.kategorier.includes(k)).length}</span></button></li>`).join('');
+  const rows = verktyg.map((v, i) => {
+    const thumb = media(v.id + '/miniatyr', '');
+    const name = v.case ? `<a href="verktyg/${v.id}/">${esc(v.namn)}</a>` : esc(v.namn);
+    return `<tr data-cat="${v.kategorier.join(' ')}"${thumb ? ' class="has-thumb"' : ''}>
+        <td class="r-nr">${String(i + 1).padStart(2, '0')}</td>
+        <th scope="row" class="r-name">${name}${v.typ ? `<span class="r-typ">${esc(v.typ)}</span>` : ''}</th>
+        <td class="r-desc">${esc(v.rad)}${thumb ? `<span class="r-thumb" aria-hidden="true">${thumb.html.replace(/ alt="[^"]*"/, ' alt=""')}</span>` : ''}</td>
+        <td class="r-cat">${v.kategorier.map((k) => kategorier[k]).join(' · ')}</td>
+        <td class="r-st">${badge(v.id)}</td>
+      </tr>`;
+  }).join('\n');
+  return `<div class="filter js-only"><p class="filter-k" id="filter-k">Visa</p><ul class="chips" aria-labelledby="filter-k">${chips}</ul><p class="vh" aria-live="polite" id="filter-live"></p></div>
+    <div class="reg-wrap">
+    <table class="reg">
+      <caption class="vh">Alla verktyg med kategori och status</caption>
+      <thead><tr><th scope="col" class="r-nr">Nr</th><th scope="col">Verktyg</th><th scope="col" class="r-desc">Vad det gör</th><th scope="col" class="r-cat">Kategori</th><th scope="col" class="r-st">Status</th></tr></thead>
+      <tbody>
+${rows}
+      </tbody>
+    </table>
+    </div>
+    <p class="reg-more js-only"><button type="button" class="btn-s" data-reg-more aria-expanded="false">Visa alla ${verktyg.length} verktyg</button></p>`;
+}
+
+function systemkarta() {
+  // Endast kopplingar som underlaget belägger (beslut3 punkt 5)
+  const lanes = [
+    { k: 'tidplan', t: 'Tidplan till modell och byggplats', nodes: [['Tidplan', 'Powerproject · Primavera P6'], ['Tidplan i modellen', 'SketchUp-tillägg', 'tidplan-i-modellen'], ['IFC', 'SWEREF 99'], ['Trimble Connect', 'Modellvisare']] },
+    { k: 'ritningar', t: 'Ritningar till pärmar', nodes: [['Ritningsleverans', 'PDF'], ['BinderBuilder', 'Pärm per område', 'binderbuilder']] },
+    { k: 'pp', t: 'Powerproject-filer direkt', nodes: [['Powerproject-filer', '.pp'], ['4D-planeringsappen', 'Tavla · Gantt · beroenden', '4d-planeringsappen']] },
+  ];
+  return `<ol class="map">${lanes.map((l) => `
+      <li class="lane lane-${l.k} reveal">
+        <p class="lane-t">${esc(l.t)}</p>
+        <ol class="nodes">${l.nodes.map(([n, s, tool]) => {
+          const inner = `<span class="node-n">${esc(n)}</span><span class="node-s">${esc(s)}</span>`;
+          const cls = tool ? ' node-tool' : '';
+          if (tool && byId[tool].case) return `<li class="node${cls}"><a href="verktyg/${tool}/">${inner}</a></li>`;
+          return `<li class="node${cls}"><span class="node-in">${inner}</span></li>`;
+        }).join('')}</ol>
+      </li>`).join('')}
+    </ol>`;
+}
+
+function kalkyl() {
+  const opts = [['alla', 'Alla'], ...moment.map((m) => [m.verktyg, m.kort || byId[m.verktyg].namn])];
+  const chips = opts.map(([k, t], i) => `<li><button type="button" class="chip" data-preset="${k}" aria-pressed="${i === 0}">${esc(t)}</button></li>`).join('');
+  const rows = moment.map((m, i) => `
+          <div class="crow" data-tool="${m.verktyg}">
+            <label for="${m.id}">${esc(m.text)} <span class="by">${esc(byId[m.verktyg].namn)}</span></label>
+            <input type="range" id="${m.id}" data-h data-def="${m.h}" data-i="${i}" min="0" max="8" step="0.5" value="${m.h}" aria-valuetext="${m.h} ${m.h === 1 ? 'timme' : 'timmar'}">
+            <output class="cval" for="${m.id}">${m.h} h</output>
+          </div>`).join('');
+  const totH = moment.reduce((s, m) => s + m.h, 0);
+  const kr = (n) => new Intl.NumberFormat('sv-SE').format(Math.round(n / 1000) * 1000) + ' kr';
+  const weeks = 45, rate = 700, mon = 24;
+  const shares = moment.map((m, i) => `<span class="sh sh-${i}" style="--v:${m.h / totH}"></span>`).join('');
+  const legend = moment.map((m, i) => `<li><i class="sh-${i}" aria-hidden="true"></i>${esc(byId[m.verktyg].namn)}<b data-share="${i}">${Math.round(m.h / totH * 100)} %</b></li>`).join('');
+  return `<div class="calc" id="calc-root">
+      <div class="calc-presets js-only"><p class="filter-k" id="preset-k">Förval</p><ul class="chips" aria-labelledby="preset-k">${chips}</ul></div>
+      <div class="calc-grid">
+      <form class="calc-form" id="calc">
+        <details class="calc-d" data-moments open>
+          <summary><span>Timmar per vecka per moment</span><span class="calc-d-v" id="sum-h">${totH} h</span></summary>
+        <fieldset>
+          <legend class="vh">Timmar per vecka som går till</legend>${rows}
+        </fieldset>
+        </details>
+        <details class="calc-d">
+          <summary><span>Förutsättningar</span><span class="calc-d-v" id="sum-f">${rate} kr/h · 1 person · ${mon} mån · ${weeks} v</span></summary>
+        <fieldset>
+          <legend class="vh">Förutsättningar</legend>
+          <div class="crow">
+            <label for="c-rate">Timkostnad</label>
+            <input type="range" id="c-rate" min="300" max="1500" step="50" value="${rate}" aria-valuetext="${rate} kronor">
+            <output class="cval" for="c-rate">${rate} kr</output>
+          </div>
+          <div class="crow">
+            <label for="c-ppl">Personer som gör samma moment</label>
+            <input type="range" id="c-ppl" min="1" max="10" step="1" value="1" aria-valuetext="1 person">
+            <output class="cval" for="c-ppl">1</output>
+          </div>
+          <div class="crow">
+            <label for="c-mon">Projektets längd</label>
+            <input type="range" id="c-mon" min="6" max="60" step="6" value="${mon}" aria-valuetext="${mon} månader">
+            <output class="cval" for="c-mon">${mon} mån</output>
+          </div>
+          <div class="crow">
+            <label for="c-wk">Arbetsveckor per år</label>
+            <input type="range" id="c-wk" min="40" max="48" step="1" value="${weeks}" aria-valuetext="${weeks} veckor">
+            <output class="cval" for="c-wk">${weeks} v</output>
+          </div>
+        </fieldset>
+        </details>
+        <p class="calc-nojs">Reglagen räknar om resultatet när JavaScript är påslaget. Siffrorna nedan gäller startvärdena.</p>
+      </form>
+      <div class="calc-out scene" id="calc-out">
+        <p class="over">Resultat</p>
+        <div aria-live="polite" aria-atomic="true">
+        <dl>
+          <div class="big"><dt>Handgrepp per projekt, <span id="o-mon">${mon}</span> månader</dt><dd id="o-proj">${kr(totH * weeks * (mon / 12) * rate)}</dd></div>
+          <div><dt>Per år</dt><dd id="o-year">${totH * weeks} h · ${kr(totH * weeks * rate)}</dd></div>
+          <div><dt>Per vecka</dt><dd id="o-week">${totH} h</dd></div>
+        </dl>
+        </div>
+        <div class="shares" aria-hidden="true">${shares}</div>
+        <ul class="share-l" hidden>${legend}</ul>
+        <p class="calc-f">Timmar per vecka × personer × timkostnad × arbetsveckor. Startvärdena är exempel som visar storleksordningen, inte mätresultat.</p>
+      </div>
+      </div>
+      <p class="calc-sticky js-only" aria-hidden="true"><span>Per projekt</span> <b class="js-proj">${kr(totH * weeks * (mon / 12) * rate)}</b></p>
+    </div>`;
+}
+
+function kontakt() {
+  const rows = [];
+  if (epostSet) rows.push(`<li><span class="c-k">E-post</span><a class="c-v" href="mailto:${esc(P.epost)}">${esc(P.epost)}</a></li>`);
+  if (liSet) rows.push(`<li><span class="c-k">LinkedIn</span><a class="c-v" href="${esc(P.linkedin)}">${esc(P.linkedin.replace(/^https:\/\/(www\.)?/, '').replace(/\/$/, ''))}</a></li>`);
+  rows.push(`<li><span class="c-k">Ort</span><span class="c-v">${esc(P.ort)}</span></li>`);
+  const how = epostSet && liSet ? ' Skicka ett mejl eller hitta mig på LinkedIn.' : epostSet ? ' Skicka ett mejl.' : ' Hitta mig på LinkedIn.';
+  // Utan kontaktväg: ingen uppmaning att höra av sig, och inget menyval (se header)
+  const head = hasContact
+    ? `<p class="over">Kontakt</p>
+      <h2 id="h-kontakt">Planering, VDC och digitalisering.</h2>
+      <p class="lead">Hör av dig om du vill prata planering, VDC eller digitalisering i byggprojekt.${how}</p>`
+    : `<h2 id="h-kontakt">Planering, VDC och egna verktyg.</h2>`;
+  return { KONTAKT_HEAD: head, KONTAKT: `<ul class="contact">${rows.join('')}</ul>` };
+}
+
+/* ---------------- Startsidan ---------------- */
+function buildHome() {
+  const base = '';
+  const drift = verktyg.filter((v) => STATUS[v.id] === 'drift').length;
+  const title = `${fullName} – Produktionsplanering, VDC och egna digitala verktyg`;
+  const desc = 'Projektering, teknisk ledning och nu produktionsplanering och VDC. Egna verktyg, byggda med AI som utvecklingsstöd, som kopplar tidplanen till modellen och byggplatsen.';
+  const jsonld = {
+    '@context': 'https://schema.org', '@type': 'Person', name: fullName, url: URL,
+    jobTitle: 'Produktionsplanering och VDC', description: desc, knowsAbout: ['Produktionsplanering', 'VDC', '4D-planering', 'BIM', 'Tekla', 'Trimble Connect'],
+    address: { '@type': 'PostalAddress', addressRegion: P.ort, addressCountry: 'SE' },
+    ...(liSet ? { sameAs: [P.linkedin] } : {}),
+  };
+  const rep = {
+    ...heroBlock(),
+    HEAD: head({ base, title, desc, canonical: URL, ogImageAlt: 'Linjeritning av en industrihall i statusfärger, vecka 18', jsonld }).replace('<html lang="sv">', '<html lang="sv" data-page="start">'),
+    HEADER: header(base, true),
+    FOOTER: footer(),
+    NAME: esc(fullName),
+    TOOLS_N: String(verktyg.length),
+    TOOLS_DRIFT: String(drift),
+    FLAGSHIP: flagship(),
+    CARDS: cards(),
+    REGISTER: register(),
+    MAP: systemkarta(),
+    KALKYL: kalkyl(),
+    ...kontakt(),
   };
   let src = fs.readFileSync(path.join(__dirname, 'index.src.html'), 'utf8');
   src = src.replace(/\{\{(\w+)\}\}/g, (m, k) => { if (!(k in rep)) throw new Error('Okänd platshållare ' + k); return rep[k]; });
   fs.writeFileSync(path.join(ROOT, 'index.html'), src);
-  fs.writeFileSync(path.join(ROOT, 'img', 'favicon.svg'), favicon());
-  fs.writeFileSync(path.join(__dirname, 'og-hero.svg'), hero.svg);
-  console.log('Skrev index.html (' + src.length + ' tecken)');
+  return src.length;
 }
 
-module.exports = { ACTS, NOW, heroSvg };
+/* ---------------- Case-sidor ---------------- */
+const CASE_ART = { 'tidplan-i-modellen': () => R.caseTidplan(), 'trimble-connect': () => R.cardTC(), 'production-cockpit': () => R.cardCockpit(), binderbuilder: () => R.cardBinder() };
+const DEMO = {
+  flytta: { html: D.flytta, title: 'Flytta en aktivitet', cap: 'Dra en aktivitet i Gantten. Delarna i modellen byter status vecka 18, och det som blir sent syns direkt.' },
+  kaskad: { html: D.kaskad, title: 'Kaskaden', cap: 'Flytta en aktivitet: efterföljarna flyttas automatiskt. I demon visar heatmapen antal aktiviteter per vecka. AI-delen visas inte i demon.' },
+  platsminne: { html: D.platsminne, title: 'Platsminnet', cap: 'Varje objekt bär sina att göra-punkter, sin ritning och sitt foto. Ritning och foto är egenritade.' },
+  sortera: { html: D.sortera, title: 'Sortera leveransen', cap: 'Tryck Kör: 24 generiska ritningar sorteras till pärmar per område.' },
+};
+
+function buildCase(id, idx) {
+  const v = byId[id];
+  const c = v.case;
+  const base = '../../';
+  const canonical = `${URL}verktyg/${id}/`;
+  const title = `${v.namn} – ${fullName}`;
+  const desc = c.lede;
+  const s = statusOf(id);
+  const demo = DEMO[c.demo];
+  const demoFrame = (fig) => frame({ fig, title: demo.title, mode: 'Demo · generiska data', body: demo.html(), cls: 'frame-stage frame-demo', caption: esc(demo.cap) });
+  const prevMedia = media(id + '/forhandsvisning', base, { eager: true });
+  const preview = prevMedia
+    ? frame({ fig: 1, title: v.namn, mode: prevMedia.mode, body: prevMedia.html, cls: 'frame-stage', attrs: ` data-vt="${id}"` })
+    : demoFrame(1).replace('<figure class="frame', `<figure data-vt="${id}" class="frame`);
+
+  const fakta = [...c.fakta, ['Status', badge(id)]];
+  const factsHtml = fakta.map(([k, val]) => `<div><dt>${esc(k)}</dt><dd>${k === 'Status' ? val : esc(val)}</dd></div>`).join('');
+
+  const fig = { n: 1 }; // löpande figurnummer i sidans ordning
+  const steps = c.steg.map((st, i) => {
+    const m = media(`${id}/steg-${i + 1}`, base);
+    return `<li class="step reveal"><span class="step-n" aria-hidden="true">${String(i + 1).padStart(2, '0')}</span><div class="step-b"><h3>${esc(st.t)}</h3><p>${esc(st.p)}</p>${m ? `<div class="step-m">${frame({ fig: ++fig.n, title: st.t, mode: m.mode, body: m.html })}</div>` : ''}</div></li>`;
+  }).join('');
+
+  const fnMedia = {};
+  c.funktioner.forEach((f) => { if (f.bild === false) return; const m = media(`${id}/funktion-${f.key}`, base); if (m) fnMedia[f.key] = m; });
+  const art = CASE_ART[id]();
+  const fnBody = `<div class="fn-art" data-art>${art}</div>${Object.entries(fnMedia).map(([k, m]) => `<div class="fn-m" data-f="${k}" hidden>${m.html}</div>`).join('')}`;
+  const fnList = c.funktioner.map((f) => f.bild === false
+    ? `<li class="fn-plain"><span class="fn-n">${esc(f.namn)}</span><span class="fn-t">${esc(f.text)}</span></li>`
+    : `<li><button type="button" class="fn-b" data-f="${f.key}" data-mode="${fnMedia[f.key] ? esc(fnMedia[f.key].mode) : 'Illustration'}" aria-pressed="false"><span class="fn-n">${esc(f.namn)}</span><span class="fn-t">${esc(f.text)}</span></button></li>`).join('');
+
+  // Teknik och Status: bara fält med värde visas
+  const T = c.teknik || {};
+  const tekRows = [['Språk', T.sprak], ['Körs', T.kors], ['Data lagras', T.data], ['Externa tjänster', T.externa]].filter(([, v2]) => isSet(v2 || ''));
+  const tekHtml = tekRows.length || (T.taggar || []).length ? `
+<section class="c-sec" aria-labelledby="h-tech">
+  <div class="wrap c-row">
+    <h2 class="c-h" id="h-tech">Teknik</h2>
+    <div class="c-c">
+      ${tekRows.length ? `<dl class="facts c-facts">${tekRows.map(([k, v2]) => `<div><dt>${k}</dt><dd>${esc(v2)}</dd></div>`).join('')}</dl>` : ''}
+      ${(T.taggar || []).length ? tags(T.taggar) : ''}
+    </div>
+  </div>
+</section>` : '';
+  const S = c.status || {};
+  const stRows = [['Fungerar i dag', S.fungerar], ['Återstår', S.aterstar]].filter(([, v2]) => isSet(v2 || ''));
+  const fnHtml = c.funktioner.length ? `
+<section class="c-sec c-fn" aria-labelledby="h-fn">
+  <div class="wrap">
+    <div class="c-row"><h2 class="c-h" id="h-fn">Funktioner</h2><p class="c-c c-note js-only">Välj en funktion för att se var den finns.</p></div>
+    <div class="fn" data-fn>
+      <ul class="fn-list">${fnList}</ul>
+      <div class="fn-stage">FNFRAME</div>
+    </div>
+  </div>
+</section>` : '';
+
+  const next = byId[caseOrdning[(idx + 1) % caseOrdning.length]];
+  const nextArt = CASE_ART[next.id]();
+  const nytta = c.nytta.map((n) => `<li>${esc(n)}</li>`).join('');
+
+  const demoLater = prevMedia ? `
+<section class="scene c-demo" aria-labelledby="h-demo">
+  <div class="wrap">
+    <div class="c-row"><h2 class="c-h" id="h-demo">Prova själv</h2><div class="c-c">${demoFrame(++fig.n)}</div></div>
+  </div>
+</section>` : '';
+
+  const fnFinal = fnHtml.replace('FNFRAME', () => frame({ fig: ++fig.n, title: 'Funktioner', mode: 'Illustration', body: fnBody, cls: 'frame-fn' }));
+  const jsonld = { '@context': 'https://schema.org', '@type': 'CreativeWork', name: v.namn, description: c.lede, url: canonical, inLanguage: 'sv', creator: { '@type': 'Person', name: fullName, url: URL } };
+
+  const html = `${head({ base, title, desc, canonical, ogImageAlt: 'Linjeritning av en industrihall i statusfärger, vecka 18', jsonld })}
+<body>
+${header(base, false)}
+
+<main id="innehall" tabindex="-1">
+
+<section class="c-hero" aria-labelledby="h1">
+  <div class="wrap">
+    <nav class="crumbs" aria-label="Brödsmulor"><ol><li><a href="${base}#verktyg">Verktyg</a></li><li><span aria-current="page">${esc(v.namn)}</span></li></ol></nav>
+    <div class="c-hero-in">
+      <div class="c-hero-t">
+        <h1 id="h1">${esc(v.namn)}</h1>
+        <p class="lead">${esc(c.lede)}</p>
+      </div>
+      <dl class="facts">${factsHtml}</dl>
+    </div>
+  </div>
+</section>
+
+<section class="scene c-prev" aria-label="Förhandsvisning">
+  <div class="wrap wrap-bleed">
+    ${preview}
+  </div>
+</section>
+
+<section class="c-sec" aria-labelledby="h-problem">
+  <div class="wrap c-row">
+    <h2 class="c-h" id="h-problem">Problemet</h2>
+    <div class="c-c">${c.problem.map((p, i) => `<p class="${i ? 'c-p' : 'c-lead'}">${esc(p)}</p>`).join('')}</div>
+  </div>
+</section>
+
+<section class="c-sec" aria-labelledby="h-how">
+  <div class="wrap c-row">
+    <h2 class="c-h" id="h-how">Så fungerar det</h2>
+    <ol class="c-c steps">${steps}</ol>
+  </div>
+</section>
+${demoLater}
+${fnFinal}
+${tekHtml}
+
+<section class="c-sec" aria-labelledby="h-status">
+  <div class="wrap c-row">
+    <h2 class="c-h" id="h-status">Status</h2>
+    <div class="c-c"><p class="c-status">${badge(id)}</p>${stRows.length ? `<dl class="facts c-facts">${stRows.map(([k, v2]) => `<div><dt>${k}</dt><dd>${esc(v2)}</dd></div>`).join('')}</dl>` : ''}</div>
+  </div>
+</section>
+
+<section class="c-sec" aria-labelledby="h-nytta">
+  <div class="wrap c-row">
+    <h2 class="c-h" id="h-nytta">Nytta</h2>
+    <div class="c-c">
+      <ul class="nytta">${nytta}</ul>
+      <p class="more-link"><a class="tlink" href="${base}?verktyg=${id}#kalkyl">Räkna på handgreppen i ditt projekt ${arrow}</a></p>
+    </div>
+  </div>
+</section>
+
+<section class="c-next" aria-labelledby="h-next">
+  <div class="wrap">
+    <h2 class="vh" id="h-next">Nästa verktyg</h2>
+    <a class="next" href="${base}verktyg/${next.id}/">
+      <span class="next-t"><span class="over">Nästa verktyg</span><span class="next-n">${esc(next.namn)}</span><span class="next-l">${esc(next.case.lede)}</span><span class="tlink">Se hur det fungerar ${arrow}</span></span>
+      <span class="next-a" aria-hidden="true">${nextArt}</span>
+    </a>
+    <p class="back"><a class="tlink" href="${base}#verktyg"><span class="arr arr-l" aria-hidden="true">←</span> Alla verktyg</a></p>
+  </div>
+</section>
+
+</main>
+
+${footer()}`;
+  const dir = path.join(ROOT, 'verktyg', id);
+  fs.mkdirSync(dir, { recursive: true });
+  fs.writeFileSync(path.join(dir, 'index.html'), html);
+  return html.length;
+}
+
+/* ---------------- 404, sitemap, robots ---------------- */
+function build404() {
+  const base = URL_PATH;
+  const html = `${head({ base, title: `Sidan finns inte – ${fullName}`, desc: 'Sidan finns inte.', canonical: URL, ogImageAlt: 'Linjeritning av en industrihall', jsonld: { '@context': 'https://schema.org', '@type': 'WebPage', name: 'Sidan finns inte' } }).replace(/<link rel="canonical"[^>]*>\n/, '').replace('<meta name="description"', '<meta name="robots" content="noindex">\n<meta name="description"')}
+<body>
+${header(base, false)}
+<main id="innehall" tabindex="-1">
+<section class="c-hero nf">
+  <div class="wrap">
+    <p class="over">Fel 404</p>
+    <h1 id="h1">Ritningen finns inte i förteckningen.</h1>
+    <p class="lead">Adressen leder inte till någon sida. Börja om från startsidan.</p>
+    <p class="more-link"><a class="btn btn-main" href="${base}">Till startsidan</a></p>
+  </div>
+</section>
+</main>
+${footer()}`;
+  fs.writeFileSync(path.join(ROOT, '404.html'), html);
+}
+function buildSeo() {
+  const urls = [URL, ...caseOrdning.map((id) => `${URL}verktyg/${id}/`)];
+  fs.writeFileSync(path.join(ROOT, 'sitemap.xml'), `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n${urls.map((u) => `  <url><loc>${u}</loc></url>`).join('\n')}\n</urlset>\n`);
+  fs.writeFileSync(path.join(ROOT, 'robots.txt'), `User-agent: *\nAllow: /\nSitemap: ${URL}sitemap.xml\n`);
+}
+
+/* ---------------- Kör ---------------- */
+function build() {
+  const n = buildHome();
+  console.log('Skrev index.html (' + n + ' tecken)');
+  caseOrdning.forEach((id, i) => { if (!byId[id] || !byId[id].case) throw new Error('Case saknas för ' + id); const k = buildCase(id, i); console.log(`Skrev verktyg/${id}/index.html (${k} tecken)`); });
+  build404();
+  buildSeo();
+  fs.writeFileSync(path.join(ROOT, 'img', 'favicon.svg'), R.favicon());
+  const hero = R.hall('og');
+  fs.writeFileSync(path.join(__dirname, 'og-hero.svg'), hero.svg);
+  Object.keys(MEDIA).forEach((k) => { if (!usedSlots.has(k)) warn(`platsen "${k}" i media.js används inte på någon sida`); });
+  console.log('Klart. Media ifyllda: ' + Object.values(MEDIA).filter(Boolean).length + ' av ' + Object.keys(MEDIA).length);
+}
+
+module.exports = { build };
 if (require.main === module) build();

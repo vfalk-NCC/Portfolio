@@ -1,6 +1,6 @@
-<svg class="bldg" id="bldg" viewBox="-200 -75 484 325" role="img" aria-labelledby="bldg-t bldg-d">
-<title id="bldg-t">Axonometrisk ritning av en generisk industrihall</title>
-<desc id="bldg-d">Hallens delar får statusfärg efter tidplanens vecka: planerad, pågår, klar eller försenad. I vecka 18 ligger väggarna efter plan.</desc>
+<svg class="bldg" id="og" viewBox="-200 -75 484 325" role="img" aria-labelledby="og-t og-d">
+<title id="og-t">Axonometrisk ritning av en generisk industrihall</title>
+<desc id="og-d">Hallens delar får statusfärg efter tidplanens vecka: planerad, pågår, klar eller försenad. I vecka 18 ligger väggarna efter plan.</desc>
 <g class="grid" aria-hidden="true"><line class="ax" x1="23.4" y1="-13.5" x2="-145" y2="83.7"/><line class="ax" x1="79.5" y1="18.9" x2="-88.9" y2="116.1"/><line class="ax" x1="135.6" y1="51.3" x2="-32.7" y2="148.5"/><line class="ax" x1="191.7" y1="83.7" x2="23.4" y2="180.9"/><line class="ax" x1="247.9" y1="116.1" x2="79.5" y2="213.3"/><line class="ax" x1="-23.4" y1="-13.5" x2="257.2" y2="148.5"/><line class="ax" x1="-79.5" y1="18.9" x2="201.1" y2="180.9"/><line class="ax" x1="-135.6" y1="51.3" x2="145" y2="213.3"/></g>
 <g class="parts"><polygon class="el d k-slab" data-a="1" data-pw="1" data-w="1" points="0,0 56.1,32.4 -56.1,97.2 -112.2,64.8"/>
 <polygon class="el d k-slab" data-a="1" data-pw="2" data-w="2" points="56.1,32.4 112.2,64.8 0,129.6 -56.1,97.2"/>

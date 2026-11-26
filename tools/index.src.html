@@ -1,53 +1,6 @@
-<!DOCTYPE html>
-<!-- Genererad av tools/gen.js. Redigera tools/index.src.html och kör: node tools/gen.js -->
-<html lang="sv">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Victor {{NAME_TEXT}} – Produktionsplanering, VDC och egna digitala verktyg</title>
-<meta name="description" content="Produktionsplanerare och VDC i byggbranschen sedan 2014. Egna digitala verktyg, byggda med AI som utvecklingsstöd, som kopplar tidplanen till modellen och byggplatsen.">
-<link rel="canonical" href="{{URL}}">
-<meta property="og:type" content="website">
-<meta property="og:locale" content="sv_SE">
-<meta property="og:site_name" content="Victor {{NAME_TEXT}}">
-<meta property="og:url" content="{{URL}}">
-<meta property="og:title" content="Victor {{NAME_TEXT}} – Produktionsplanering, VDC och egna digitala verktyg">
-<meta property="og:description" content="Tidplanen styr modellen. Egna verktyg, byggda med AI som utvecklingsstöd, som tar bort handgrepp i byggproduktionen.">
-<meta property="og:image" content="{{URL}}img/og.png">
-<meta property="og:image:width" content="1200">
-<meta property="og:image:height" content="630">
-<meta property="og:image:alt" content="Linjeritning av en industrihall i statusfärger, vecka 18">
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Victor {{NAME_TEXT}} – Produktionsplanering, VDC och egna digitala verktyg">
-<meta name="twitter:description" content="Tidplanen styr modellen. Egna verktyg, byggda med AI som utvecklingsstöd, som tar bort handgrepp i byggproduktionen.">
-<meta name="twitter:image" content="{{URL}}img/og.png">
-<meta name="theme-color" content="#F5F3EE">
-<link rel="icon" href="img/favicon.svg" type="image/svg+xml">
-<link rel="preload" href="fonts/ibm-plex-sans-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="preload" href="fonts/ibm-plex-sans-latin-600-normal.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="stylesheet" href="css/style.css">
-<script>(function(d){d.classList.add('js');if(!window.matchMedia('(prefers-reduced-motion: reduce)').matches){d.classList.add('intro');setTimeout(function(){d.classList.remove('intro');},3000);}})(document.documentElement);</script>
-<script src="js/main.js" defer></script>
-</head>
+{{HEAD}}
 <body>
-<a class="skip" href="#innehall">Hoppa till innehåll</a>
-
-<header class="top">
-  <div class="wrap top-in">
-    <a class="brand" href="#top">
-      <svg class="brand-mark" viewBox="0 0 64 64" aria-hidden="true" focusable="false"><rect x="7" y="7" width="50" height="50" fill="none" stroke="currentColor" stroke-width="4"/><path d="M19 18 L32 47 L45 18" fill="none" stroke="currentColor" stroke-width="6"/><path d="M2 2 H16 M2 2 V16" stroke="#E8551E" stroke-width="5"/></svg>
-      <span class="brand-t">Victor <span class="brand-ln">{{NAME}}</span></span>
-    </a>
-    <nav aria-label="Huvudmeny">
-      <ul class="nav">
-        <li><a href="#verktyg">Verktyg</a></li>
-        <li><a href="#arbetssatt">Arbetssätt</a></li>
-        <li><a href="#erfarenhet">Erfarenhet</a></li>
-        <li><a href="#kontakt">Kontakt</a></li>
-      </ul>
-    </nav>
-  </div>
-</header>
+{{HEADER}}
 
 <main id="innehall" tabindex="-1">
 
@@ -55,19 +8,13 @@
   <div class="wrap hero-in">
     <div class="hero-txt">
       <p class="over">Planering · VDC · Egna verktyg</p>
-      <h1 id="h1" class="name">Victor {{NAME}}</h1>
+      <h1 id="h1" class="name">{{NAME}}</h1>
       <p class="claim">Tidplanen styr modellen. Verktygen bygger jag själv.</p>
-      <p class="lead">Produktionsplanerare och VDC i byggbranschen sedan 2014. Med AI som utvecklingsstöd bygger jag egna verktyg som kopplar tidplanen till modellen och byggplatsen och tar bort handgrepp som annars äter timmar varje vecka.</p>
-      <p class="cta">
-        <a class="btn btn-main" href="#verktyg">Se verktygen</a>
-        <a class="btn" href="#kontakt">Kontakt</a>
-      </p>
+      <p class="lead">Över tio år av projektering och teknisk ledning, nu produktionsplanering och VDC i ett industriprojekt i miljardklassen. Med AI som utvecklingsstöd bygger jag egna verktyg som kopplar tidplanen till modellen och byggplatsen, och tar bort handgrepp som annars görs om varje vecka.</p>
     </div>
 
-    <figure class="plan" id="plan" style="--w:{{NOW}}" data-now="{{NOW}}">
-      <div class="plan-head" aria-hidden="true">
-        <span>FIG. 1</span><span>Generisk industrihall</span><span class="ph-3">Tidplan styr modell</span>
-      </div>
+    <figure class="frame plan" id="plan" style="--w:{{NOW}};--weeks:{{WEEKS}}" data-now="{{NOW}}">
+      <div class="frame-tb" aria-hidden="true"><span>Fig. 1</span><span class="frame-ti">Generisk industrihall</span><span class="frame-mo">Demo · generiska data</span></div>
       <div class="plan-draw">
         {{HERO}}
       </div>
@@ -96,212 +43,102 @@
       <figcaption>Dra i reglaget. Varje vecka i tidplanen ger varje del i modellen en statusfärg, så att avvikelser syns innan byggmötet. Samma princip som verktyget Tidplan i modellen.</figcaption>
     </figure>
 
-    <dl class="facts">
+    <p class="cta">
+      <a class="btn btn-main" href="#verktyg">Se verktygen</a>
+      <a class="btn" href="verktyg/tidplan-i-modellen/">Tidplan i modellen</a>
+    </p>
+
+    <dl class="facts hero-facts">
       <div><dt>I branschen</dt><dd>Sedan 2014</dd></div>
-      <div><dt>Byggda med</dt><dd>AI som utvecklingsstöd, främst Claude</dd></div>
+      <div><dt>Bakgrund</dt><dd>Projektering, teknisk ledning, produktion</dd></div>
       <div><dt>Tidplan i modellen</dt><dd>Används varje vecka</dd></div>
     </dl>
   </div>
 </section>
 
-<section class="sec sec-first" id="skillnad" aria-labelledby="h-skillnad">
-  <div class="wrap">
-    <p class="over"><span class="num">01</span>Det som skiljer</p>
-    <h2 id="h-skillnad">Planering som syns, verktyg som körs</h2>
-    <ol class="three">
-      <li class="reveal">
-        <span class="chip">Modell</span>
-        <h3>Tidplanen syns i modellen</h3>
-        <p>Tidplaner från Powerproject och Primavera P6 kopplas till 3D-modellen. Varje vecka får varje del en statusfärg, och lägesbilden går ut till byggmötet och till Trimble Connect.</p>
-      </li>
-      <li class="reveal">
-        <span class="chip">Automatik</span>
-        <h3>Handgrepp blir verktyg</h3>
-        <p>Ritningspärmar, filspegling och kontroller av tidplanen sker automatiskt. Där andra gör samma moment varje vecka skriver jag ett verktyg.</p>
-      </li>
-      <li class="reveal">
-        <span class="chip">Bredd</span>
-        <h3>Ritningen och bygget, från båda håll</h3>
-        <p>Från projektering och modellering till planering i produktionen. Jag vet hur ritningar och modeller blir till, och vad bygget behöver av dem.</p>
-      </li>
-    </ol>
-  </div>
-</section>
+{{FLAGSHIP}}
 
 <section class="sec" id="verktyg" aria-labelledby="h-verktyg">
   <div class="wrap">
-    <p class="over"><span class="num">02</span>Verktyg</p>
-    <h2 id="h-verktyg">Verktyg jag har byggt</h2>
-    <p class="intro">Egna initiativ, byggda med AI som utvecklingsstöd, främst Claude. Vart och ett svarar på ett problem från planeringen eller bygget.</p>
-
-    <div class="tools">
-      <article class="tool reveal" aria-labelledby="t-1">
-        <div class="tool-art draw">{{ART_KOPPLING}}</div>
-        <div class="tool-body">
-          <p class="tool-no">Verktyg 01 · SketchUp-tillägg</p>
-          <h3 id="t-1">Tidplan i modellen</h3>
-          <dl class="pl">
-            <dt>Problem</dt><dd>Tidplan och modell lever i olika program.</dd>
-            <dt>Lösning</dt><dd>Ett tillägg till SketchUp som läser tidplanen och färgar modellen vecka för vecka. Används varje vecka.</dd>
-          </dl>
-          <ul class="tags" aria-label="Funktioner">
-            <li>Powerproject</li><li>Primavera P6</li><li>Tidsreglage</li><li>Gantt och tavla</li><li>Montageordning</li><li>Skyltar i 3D</li><li>IFC till Trimble Connect</li><li>SWEREF 99</li>
-          </ul>
-        </div>
-      </article>
-
-      <article class="tool reveal" aria-labelledby="t-2">
-        <div class="tool-art draw">{{ART_TC}}</div>
-        <div class="tool-body">
-          <p class="tool-no">Verktyg 02 · Workspace API</p>
-          <h3 id="t-2">Tillägg till Trimble Connect</h3>
-          <dl class="pl">
-            <dt>Problem</dt><dd>Modellvisaren saknar verktyg för det arbete som görs på bygget.</dd>
-            <dt>Lösning</dt><dd>Egna verktyg direkt i modellvisaren: mät, märk upp och koppla ritningar och foton till rätt plats i modellen.</dd>
-          </dl>
-          <ul class="tags" aria-label="Funktioner">
-            <li>Annoteringar</li><li>Mängd med polygon och TIN</li><li>PDF-överlägg</li><li>Geotaggade foton</li><li>Egenskapsetiketter</li><li>Platsminnet</li>
-          </ul>
-        </div>
-      </article>
-
-      <article class="tool reveal" aria-labelledby="t-3">
-        <div class="tool-art ba-wrap">
-          <div class="ba" id="ba" style="--pos:50%">
-            <div class="ba-layer ba-after">{{EFTER}}</div>
-            <div class="ba-layer ba-before">{{FORE}}</div>
-            <input class="ba-range" type="range" id="ba-range" min="0" max="100" step="1" value="50" aria-label="Jämför före och efter: vecka 6 mot vecka 22" aria-valuetext="Hälften före, hälften efter">
-            <span class="ba-line" aria-hidden="true"><span class="ba-knob"><svg viewBox="0 0 24 24" focusable="false"><path d="M9 7 L4 12 L9 17 M15 7 L20 12 L15 17" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round"/></svg></span></span>
-          </div>
-          <p class="ba-hint" aria-hidden="true"><span>Före · vecka 6</span><span>Dra i skiljelinjen</span><span>Efter · vecka 22</span></p>
-        </div>
-        <div class="tool-body">
-          <p class="tool-no">Verktyg 03 · Lite-demo</p>
-          <h3 id="t-3">Före/Efter</h3>
-          <dl class="pl">
-            <dt>Problem</dt><dd>Framdrift är svår att visa i ord.</dd>
-            <dt>Lösning</dt><dd>Två bilder, en dragbar skiljelinje och en fristående fil som kan skickas vidare. Visades i projektet och togs väl emot.</dd>
-          </dl>
-          <ul class="tags" aria-label="Funktioner">
-            <li>Dragbar skiljelinje</li><li>Fristående visningsfil</li><li>Framdrift</li>
-          </ul>
-          <p class="note">Demon använder egenritade bilder av en tidig och en sen byggfas.</p>
-        </div>
-      </article>
-
-      <article class="tool reveal" aria-labelledby="t-4">
-        <div class="tool-art draw">{{ART_BINDER}}</div>
-        <div class="tool-body">
-          <p class="tool-no">Verktyg 04 · Ritningspärmar</p>
-          <h3 id="t-4">BinderBuilder</h3>
-          <dl class="pl">
-            <dt>Problem</dt><dd>En leverans är cirka 240 PDF som ska sorteras per område.</dd>
-            <dt>Lösning</dt><dd>Läser leveransen, sorterar varje ritning till rätt område och bygger färdiga PDF-pärmar. Ett sorteringsjobb blir en körning.</dd>
-          </dl>
-          <ul class="tags" aria-label="Funktioner">
-            <li>Ritningsleveranser</li><li>Pärm per område</li><li>PDF</li>
-          </ul>
-        </div>
-      </article>
+    <div class="sec-head">
+      <p class="over">Verktyg</p>
+      <h2 id="h-verktyg">Varje verktyg svarar på ett moment från bygget.</h2>
+      <p class="lead">Egna initiativ, byggda med AI som utvecklingsstöd, främst Claude. Fyra har en egen sida med en demo du kan styra. Före/Efter går att prova direkt här.</p>
     </div>
-
-    <h3 class="more-h">Fler verktyg</h3>
-    <ul class="more">
-      <li class="reveal"><span class="m-cat">Planering</span><span class="m-name">4D-planeringsappen</span><span class="m-desc">Läser Powerproject-filer direkt, med tavla, Gantt och beroenden.</span></li>
-      <li class="reveal"><span class="m-cat">Planering</span><span class="m-name">Production Cockpit</span><span class="m-desc">Tavla, heatmap, Gantt med automatisk kaskad och AI-förslag på aktivitetsföljder.</span></li>
-      <li class="reveal"><span class="m-cat">Planering</span><span class="m-name">Produktionsplanering</span><span class="m-desc">Aktiviteter på skedesplaner per månad, uppdateras under mötet.</span></li>
-      <li class="reveal"><span class="m-cat">Planering</span><span class="m-name">Planeringskoll 4D</span><span class="m-desc">Automatiska rimlighetskontroller av tidplanen.</span></li>
-      <li class="reveal"><span class="m-cat">Modell</span><span class="m-name">Punktmolnsvisare</span><span class="m-desc">Egna LAZ-moln, testad med 1,4 GB, koordinater, IFC och volymuttag.</span></li>
-      <li class="reveal"><span class="m-cat">Modell</span><span class="m-name">Ritningsregister och 3D-redigerare</span><span class="m-desc">Ritningsregister i .NET 8 och egen 3D-redigerare för DWG, IFC och DXF.</span></li>
-      <li class="reveal"><span class="m-cat">Data</span><span class="m-name">SharePoint-spegel</span><span class="m-desc">Speglar en plats till lokal disk med ett klick, bara ändrade filer.</span></li>
-      <li class="reveal"><span class="m-cat m-soon">På gång</span><span class="m-name">Mötesprotokoll</span><span class="m-desc">Spelar in, transkriberar och skriver protokoll lokalt, utan molntjänster.</span></li>
-    </ul>
-
-    <div class="calc reveal" id="kalkyl">
-      <div class="calc-intro">
-        <h3>Vad kostar handgreppen?</h3>
-        <p>Verktygen tar över moment som annars görs för hand varje vecka. Ställ in vad momenten tar i ditt projekt och se vad det kostar. Startvärdena är exempel.</p>
-      </div>
-      <form class="calc-form" id="calc">
-        <fieldset>
-          <legend>Timmar per vecka som går till</legend>
-          <div class="crow">
-            <label for="c-1">Sortera ritningsleveranser i pärmar per område <span class="by">BinderBuilder</span></label>
-            <input type="range" id="c-1" data-h min="0" max="8" step="0.5" value="1" aria-valuetext="1 timme">
-            <span class="cval" aria-hidden="true">1 h</span>
-          </div>
-          <div class="crow">
-            <label for="c-2">Hämta ändrade filer från projektplatsen <span class="by">SharePoint-spegel</span></label>
-            <input type="range" id="c-2" data-h min="0" max="8" step="0.5" value="1" aria-valuetext="1 timme">
-            <span class="cval" aria-hidden="true">1 h</span>
-          </div>
-          <div class="crow">
-            <label for="c-3">Färga modellen och ta fram lägesbilder till byggmötet <span class="by">Tidplan i modellen</span></label>
-            <input type="range" id="c-3" data-h min="0" max="8" step="0.5" value="1" aria-valuetext="1 timme">
-            <span class="cval" aria-hidden="true">1 h</span>
-          </div>
-          <div class="crow">
-            <label for="c-4">Granska tidplanen efter orimliga varaktigheter <span class="by">Planeringskoll 4D</span></label>
-            <input type="range" id="c-4" data-h min="0" max="8" step="0.5" value="1" aria-valuetext="1 timme">
-            <span class="cval" aria-hidden="true">1 h</span>
-          </div>
-        </fieldset>
-        <fieldset>
-          <legend>Förutsättningar</legend>
-          <div class="crow">
-            <label for="c-rate">Timkostnad</label>
-            <input type="range" id="c-rate" min="300" max="1500" step="50" value="700" aria-valuetext="700 kronor">
-            <span class="cval" aria-hidden="true">700 kr</span>
-          </div>
-          <div class="crow">
-            <label for="c-ppl">Personer som gör samma moment</label>
-            <input type="range" id="c-ppl" min="1" max="10" step="1" value="1" aria-valuetext="1 person">
-            <span class="cval" aria-hidden="true">1</span>
-          </div>
-          <div class="crow">
-            <label for="c-mon">Projektets längd</label>
-            <input type="range" id="c-mon" min="6" max="60" step="6" value="24" aria-valuetext="24 månader">
-            <span class="cval" aria-hidden="true">24 mån</span>
-          </div>
-        </fieldset>
-        <p class="calc-sticky" aria-hidden="true"><span>Per projekt</span> <b class="js-proj">252 000 kr</b></p>
-        <p class="calc-nojs">Reglagen räknar om resultatet när JavaScript är påslaget.</p>
-      </form>
-      <div class="calc-out" id="calc-out" aria-live="polite" aria-atomic="true">
-        <dl>
-          <div><dt>Per vecka</dt><dd id="o-week">4 h</dd></div>
-          <div><dt>Per år</dt><dd id="o-year">180 h · 126 000 kr</dd></div>
-          <div class="big"><dt>Exempel: handgrepp per projekt, <span id="o-mon">24</span> månader</dt><dd class="js-proj" id="o-proj">252 000 kr</dd></div>
-        </dl>
-        <p class="calc-f">Räknat som timmar per vecka × personer × timkostnad, med 45 arbetsveckor per år. Exempel som visar storleksordningen, inte ett mätresultat.</p>
-      </div>
+    <div class="cards">
+{{CARDS}}
     </div>
+  </div>
+</section>
+
+<section class="sec sec-tight" id="register" aria-labelledby="h-register">
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="over">Verktygsregister</p>
+      <h2 id="h-register">Tolv verktyg, från i drift till på gång.</h2>
+      <p class="lead">Filtrera på det du letar efter. Verktyg med egen sida är markerade med en pil.</p>
+    </div>
+    {{REGISTER}}
+  </div>
+</section>
+
+<section class="sec" id="samband" aria-labelledby="h-samband">
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="over">Systemkarta</p>
+      <h2 id="h-samband">Så hänger det ihop.</h2>
+      <p class="lead">Tre flöden som verktygen hanterar i dag, från källfil till resultat.</p>
+    </div>
+    {{MAP}}
+  </div>
+</section>
+
+<section class="sec" id="kalkyl" aria-labelledby="h-kalkyl">
+  <div class="wrap">
+    <div class="sec-head">
+      <p class="over">Nytta</p>
+      <h2 id="h-kalkyl">Vad kostar handgreppen?</h2>
+      <p class="lead">Verktygen kan ta över moment som annars görs för hand varje vecka. Ställ in vad de tar i ditt projekt och se vad det kostar. Startvärdena är exempel.</p>
+    </div>
+    {{KALKYL}}
   </div>
 </section>
 
 <section class="sec" id="arbetssatt" aria-labelledby="h-arbetssatt">
   <div class="wrap">
-    <p class="over"><span class="num">03</span>Arbetssätt</p>
-    <h2 id="h-arbetssatt">Från problem på bygget till verktyg i drift</h2>
-    <ol class="steps">
-      <li class="reveal"><span class="step-n">1</span><p>Ett moment upprepas varje vecka, eller en fråga går inte att besvara på mötet.</p></li>
-      <li class="reveal"><span class="step-n">2</span><p>Jag bygger ett verktyg för just det, med AI som utvecklingsstöd.</p></li>
-      <li class="reveal"><span class="step-n">3</span><p>Verktyget används i den löpande planeringen och förbättras där.</p></li>
+    <div class="sec-head">
+      <p class="over">Arbetssätt</p>
+      <h2 id="h-arbetssatt">Från handgrepp till verktyg.</h2>
+      <p class="lead">Ett exempel: Tidplan i modellen.</p>
+    </div>
+    <ol class="how">
+      <li class="reveal"><span class="how-n">01</span><h3>Problemet</h3><p>Lägesbilden till byggmötet ska tas fram varje vecka, och läget ändras hela tiden.</p></li>
+      <li class="reveal"><span class="how-n">02</span><h3>Verktyget</h3><p>Ett tillägg till SketchUp som läser tidplanen och färgar modellen, byggt med AI som utvecklingsstöd.</p></li>
+      <li class="reveal"><span class="how-n">03</span><h3>I planeringen</h3><p>Ingår i den löpande produktionsplaneringen, med lägesbilder till byggmötet.</p></li>
     </ol>
   </div>
 </section>
 
 <section class="sec" id="erfarenhet" aria-labelledby="h-erfarenhet">
   <div class="wrap">
-    <p class="over"><span class="num">04</span>Erfarenhet</p>
-    <h2 id="h-erfarenhet">Erfarenhet</h2>
+    <div class="sec-head">
+      <p class="over">Erfarenhet</p>
+      <h2 id="h-erfarenhet">Från ritningen till byggplatsen.</h2>
+      <p class="lead">Projektering, teknisk ledning och produktion. Därför vet verktygen vad ritningen, modellen och bygget behöver av varandra.</p>
+    </div>
+    <div class="phases reveal" aria-hidden="true">
+      <span class="ph-1"><b>Projektering</b>2014–2020</span>
+      <span class="ph-2"><b>Teknisk ledning</b>2020–2025</span>
+      <span class="ph-3"><b>Produktion och VDC</b>2025–</span>
+    </div>
     <ol class="tl">
       <li class="reveal">
         <p class="tl-when">2025–</p>
         <div class="tl-body">
           <h3>Lead Planner, produktionsplanering och VDC</h3>
           <p class="tl-org">Stor byggentreprenör · Industriprojekt i miljardklassen · Planerare/VDC</p>
-          <p>Produktionsplanering, 4–6-veckorsplanering, plan mot utfall, APD-planer i 2D och 3D, logistik och lyftplanering, 4D-simulering, punktmolnsskanningar och lägesbilder till byggmöten. Äger produktionsplaneringsmötet.</p>
+          <p class="tl-lead">Äger produktionsplaneringsmötet.</p>
+          <p>Produktionsplanering, 4–6-veckorsplanering, plan mot utfall, APD-planer i 2D och 3D, logistik och lyftplanering, 4D-simulering, punktmolnsskanningar och lägesbilder till byggmöten.</p>
         </div>
       </li>
       <li class="reveal">
@@ -309,7 +146,8 @@
         <div class="tl-body">
           <h3>Teknikansvarig broprojekt och Tekla-förvaltningsledare</h3>
           <p class="tl-org">Teknikkonsult · Infrastruktur · Bro- och anläggningskonstruktör</p>
-          <p>Programansvarig för Tekla Structures inom anläggning i Sverige. Som teknikansvarig för broprojekt åt en statlig infrastrukturbeställare ledde jag team på 5–6 personer från förfrågan till godkända bygghandlingar och byggplatsuppföljning, med timmar mot budget. Ledande projektör för ett paket om 15–20 byggnadsverk i ett järnvägsprojekt i norra Sverige.</p>
+          <p class="tl-lead">Ledde team på 5–6 personer från förfrågan till godkända bygghandlingar och byggplatsuppföljning, med timmar mot budget.</p>
+          <p>Programansvarig för Tekla Structures inom anläggning i Sverige. Uppdragen gällde broar åt en statlig infrastrukturbeställare. Ledande projektör för ett paket om 15–20 byggnadsverk i ett järnvägsprojekt i norra Sverige.</p>
         </div>
       </li>
       <li class="reveal">
@@ -317,7 +155,8 @@
         <div class="tl-body">
           <h3>Ledande projektör och uppdragsledare</h3>
           <p class="tl-org">Teknikkonsult · Byggnad · Byggnadskonstruktör</p>
-          <p>Stål, platsgjutet, prefab, limträ och KL-trä, 3D-modellering och digital projektering. Styrde kollegor lokalt och i Indien, uppdragsledare mot slutet.</p>
+          <p class="tl-lead">Styrde kollegor lokalt och i Indien, uppdragsledare mot slutet.</p>
+          <p>Stål, platsgjutet, prefab, limträ och KL-trä, 3D-modellering och digital projektering.</p>
         </div>
       </li>
       <li class="reveal">
@@ -332,10 +171,12 @@
   </div>
 </section>
 
-<section class="sec" id="program" aria-labelledby="h-program">
+<section class="sec sec-tight" id="program" aria-labelledby="h-program">
   <div class="wrap">
-    <p class="over"><span class="num">05</span>Verktygslåda</p>
-    <h2 id="h-program">Program jag arbetar i</h2>
+    <div class="sec-head">
+      <p class="over">Verktygslåda</p>
+      <h2 id="h-program">Program jag arbetar i.</h2>
+    </div>
     <dl class="kit reveal">
       <div><dt>Modell</dt><dd>Tekla (10+ år), Trimble Connect, Revit, Rhino/Grasshopper, AutoCAD, Navisworks, StreamBIM</dd></div>
       <div><dt>Planering</dt><dd>Synchro 4D Pro, Primavera P6, Powerproject, MS Project</dd></div>
@@ -346,25 +187,14 @@
 
 <section class="sec sec-contact" id="kontakt" aria-labelledby="h-kontakt">
   <div class="wrap">
-    <p class="over"><span class="num">06</span>Kontakt</p>
-    <h2 id="h-kontakt">Hör av dig</h2>
-    <p class="intro">Vill du prata planering, VDC eller digitalisering i byggprojekt? Skicka ett mejl eller hitta mig på LinkedIn.</p>
-    <ul class="contact">
-      <li><span class="c-k">E-post</span>{{EPOST}}</li>
-      <li><span class="c-k">LinkedIn</span>{{LINKEDIN}}</li>
-      <li><span class="c-k">Ort</span><span class="c-v">Dalarna</span></li>
-    </ul>
+    <div class="sec-head">
+      {{KONTAKT_HEAD}}
+    </div>
+    {{KONTAKT}}
     <p class="coda">Nästa handgrepp blir också ett verktyg.</p>
   </div>
 </section>
 
 </main>
 
-<footer class="foot">
-  <div class="wrap foot-in">
-    <p>Verktygen på sidan är egna initiativ och inte system som införts av arbetsgivare. Inga projektdata visas.</p>
-    <p class="foot-y">© {{YEAR}} Victor {{NAME}}</p>
-  </div>
-</footer>
-</body>
-</html>
+{{FOOTER}}
